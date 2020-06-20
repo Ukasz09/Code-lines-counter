@@ -1,9 +1,19 @@
 #!/bin/bash
+HOME=$(eval echo ~${SUDO_USER}) # for proper work with sudo
+EXTENSIONS_FILE_PATH=${HOME}"/code_lines_report/extensions.txt"
 
 declare -A extensions
 declare -A results
-extensions+=( ["Java"]="java" ["Python"]="py" ["C#"]="cs" ["JavaScript"]="js" ["HTML"]="html" ["Markdown"]="md" ["Scala"]="scala" ["Shell"]="sh" ["PostgreSql"]="pgsql" ["OCaml"]="ml" ["Assembly"]="asm")
 
+read_available_extensions(){
+    while read line; do
+        name=$(echo $line | cut -d "|" -f1 | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+        ext=$(echo $line | cut -d "|" -f2 | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+        extensions[$name]="$ext"
+    done < ${EXTENSIONS_FILE_PATH}
+}
+
+##########
 
 count_lines(){
     fdfind -e $1 -x wc -l | awk '{total += $1} END {print total}'
@@ -11,7 +21,7 @@ count_lines(){
 
 # convert all jupter files to scripts
 jupyter_to_scripts(){
-    fdfind -e "ipynb" -x jupyter nbconvert --to script --log-level=0 
+    fdfind -e "ipynb" -x jupyter nbconvert --to script --log-level=0
 }
 
 # because need more than one file extension
@@ -42,9 +52,12 @@ print_results(){
     done | sort -r -t : -n -k 2
 }
 
-jupyter_to_scripts
-calc_results
-calc_cpp_results
-print_results
-
+read_available_extensions
+# jupyter_to_scripts
+# calc_results
+# calc_cpp_results
+# print_results
+for key in ${!extensions[@]}; do
+    echo ${key} ":" ${extensions[${key}]}
+done
 
