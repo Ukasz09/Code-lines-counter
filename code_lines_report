@@ -1,0 +1,50 @@
+#!/bin/bash
+
+declare -A extensions
+declare -A results
+extensions+=( ["Java"]="java" ["Python"]="py" ["C#"]="cs" ["JavaScript"]="js" ["HTML"]="html" ["Markdown"]="md" ["Scala"]="scala" ["Shell"]="sh" ["PostgreSql"]="pgsql" ["OCaml"]="ml" ["Assembly"]="asm")
+
+
+count_lines(){
+    fdfind -e $1 -x wc -l | awk '{total += $1} END {print total}'
+}
+
+# convert all jupter files to scripts
+jupyter_to_scripts(){
+    fdfind -e "ipynb" -x jupyter nbconvert --to script --log-level=0 
+}
+
+# because need more than one file extension
+calc_cpp_results(){
+    cpp_extensions=("cpp" "h" "c" "ino" "hpp" "cmake")
+    cpp_qty=0
+    for ext in ${!cpp_extensions[*]}
+    do
+        lines_no=$(count_lines ${cpp_extensions[$ext]})
+        ((cpp_qty+=lines_no))
+    done
+    results["C/C++"]=${cpp_qty}
+}
+
+calc_results(){
+    for key in ${!extensions[@]}; do
+        qty=$(count_lines ${extensions[${key}]})
+        if [ -z "${qty}" ]; then
+            qty=0
+        fi
+        results[${key}]=${qty}
+    done
+}
+
+print_results(){
+    for key in ${!results[@]}; do
+        echo ${key} ": " ${results[${key}]}
+    done | sort -r -t : -n -k 2
+}
+
+jupyter_to_scripts
+calc_results
+calc_cpp_results
+print_results
+
+
