@@ -15,19 +15,24 @@ flag_processing(){
                 case "${OPTARG}" in
                     help)
                         show_help
-                        exit 0
                     ;;
                     add_lang)
                         local NAME="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-                        local EXTENSION="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-                        add_lang ${NAME} ${EXTENSION}
-                        exit 0
+                        EXT=""
+                        until [[ ${!OPTIND} =~ ^-.* ]] || [ -z ${!OPTIND} ]; do
+                            EXT="${EXT} ${!OPTIND}"
+                            OPTIND=$(( $OPTIND + 1 ))
+                        done
+                        add_lang ${NAME} ${EXT}
                     ;;
                     remove_lang)
                         local NAME="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-                        local EXTENSION="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-                        remove_lang ${NAME} ${EXTENSION}
-                        exit 0
+                        EXT=""
+                        until [[ ${!OPTIND} =~ ^-.* ]] || [ -z ${!OPTIND} ]; do
+                            EXT="${EXT} ${!OPTIND}"
+                            OPTIND=$(( $OPTIND + 1 ))
+                        done
+                        remove_lang ${NAME} ${EXT}
                     ;;
                     *)
                         if [ "$OPTERR" != 1 ] || [ "${OPTSPEC:0:1}" = ":" ]; then
@@ -38,25 +43,29 @@ flag_processing(){
             esac;;
             h)
                 showing_help
-                exit 0
             ;;
             a)
                 local NAME="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-                local EXTENSION="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-                add_lang ${NAME} ${EXTENSION}
-                exit 0
+                EXT=""
+                until [[ ${!OPTIND} =~ ^-.* ]] || [ -z ${!OPTIND} ]; do
+                    EXT="${EXT} ${!OPTIND}"
+                    OPTIND=$(( $OPTIND + 1 ))
+                done
+                add_lang ${NAME} ${EXT}
             ;;
             r)
                 local NAME="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-                local EXTENSION="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-                remove_lang ${NAME} ${EXTENSION}
-                exit 0
+                EXT=""
+                until [[ ${!OPTIND} =~ ^-.* ]] || [ -z ${!OPTIND} ]; do
+                    EXT="${EXT} ${!OPTIND}"
+                    OPTIND=$(( $OPTIND + 1 ))
+                done
+                remove_lang ${NAME} ${EXT}
             ;;
             *)
                 if [ "$OPTERR" != 1 ] || [ "${OPTSPEC:0:1}" = ":" ]; then
                     incorrect_flag_msg '-'${OPTARG}
                 fi
-                exit 1
             ;;
         esac
     done
@@ -72,63 +81,74 @@ show_help(){
 }
 
 add_lang(){
-    local NAME=${1}
-    local EXTENSION=${2}
-    check_correctness ${NAME} ${EXTENSION}
     read_available_extensions
-    
-    # If exstension already exist
-    local FOUND_LANG=$(get_lang_of_extension ${EXTENSION})
-    if [ ! -z "${FOUND_LANG}" ]; then
-        echo "This language extension already exist in config file !"
-        exit 1
-    fi
-    
-    # If not found any available extensions for language
-    if [ -z "${EXTENSIONS_DICT[${NAME}]}" ]; then
-        echo "${NAME}${EXTENSIONS_DELIMITER}${EXTENSION}" >> ${EXTENSIONS_FILE_PATH}
-    else
-        > ${EXTENSIONS_FILE_PATH}
-        write_ext_with_ommiting_given_lang ${NAME}
-        echo "${NAME}${EXTENSIONS_DELIMITER}${EXTENSIONS_DICT[$NAME]} ${EXTENSION}" >> ${EXTENSIONS_FILE_PATH}
-    fi
-    echo "Added: " ${NAME} "|" ${EXTENSION}
+    local NAME=${1}
+    shift
+    for EXTENSION in $@; do
+        local IS_CORRECT=$(params_are_correct ${NAME} ${EXTENSION})
+        if ${IS_CORRECT}; then
+            # If exstension already exist
+            local FOUND_LANG=$(get_lang_of_extension ${EXTENSION})
+            if [ ! -z "${FOUND_LANG}" ]; then
+                echo "Not added. Extension: <${EXTENSION}> is already associated with: <${FOUND_LANG}>"
+            else
+                # If not found any available extensions for language
+                if [ -z "${EXTENSIONS_DICT[${NAME}]}" ]; then
+                    echo "${NAME}${EXTENSIONS_DELIMITER}${EXTENSION}" >> ${EXTENSIONS_FILE_PATH}
+                    EXTENSIONS_DICT[${NAME}]=${EXTENSION}
+                else
+                    > ${EXTENSIONS_FILE_PATH}
+                    write_ext_with_ommiting_given_lang ${NAME}
+                    local NEW_EXT="${EXTENSIONS_DICT[$NAME]} ${EXTENSION}"
+                    echo "${NAME}${EXTENSIONS_DELIMITER}${NEW_EXT}" >> ${EXTENSIONS_FILE_PATH}
+                    EXTENSIONS_DICT[${NAME}]=${NEW_EXT}
+                fi
+                echo "Added: " ${NAME} "|" ${EXTENSION}
+            fi
+        else
+            echo "Param cannot be empty !"
+        fi
+    done;
 }
 
 remove_lang(){
-    local NAME=${1}
-    local EXTENSION=${2}
-    check_correctness ${NAME} ${EXTENSION}
     read_available_extensions
-    local FOUND_LANG=$(get_lang_of_extension ${EXTENSION})
-    
-    # If given language not exist
-    if [ "${FOUND_LANG}" != "${NAME}" ]; then
-        echo "Config file doesn't contain <${NAME}|${EXTENSION}> element !"
-        if [ ! -z "${FOUND_LANG}" ]; then
-            echo "<${EXTENSION}> is associated with: <${FOUND_LANG}>"
-        fi
-        exit 1
-    fi
-    
-    # Removing extension
-    EXTENSIONS_AFTER_REMOVE=""
-    for val in ${EXTENSIONS_DICT[${FOUND_LANG}]}; do
-        if [ "${val}" != "${EXTENSION}" ] ; then
-            if [ -z "${EXTENSIONS_AFTER_REMOVE}" ]; then
-                EXTENSIONS_AFTER_REMOVE="${val}"
+    local NAME=${1}
+    shift
+    for EXTENSION in $@; do
+        local IS_CORRECT=$(params_are_correct ${NAME} ${EXTENSION})
+        if ${IS_CORRECT}; then
+            local FOUND_LANG=$(get_lang_of_extension ${EXTENSION})
+            # If given language not exist
+            if [ "${FOUND_LANG}" == "${NAME}" ]; then
+                # Removing extension
+                EXTENSIONS_AFTER_REMOVE=""
+                for val in ${EXTENSIONS_DICT[${FOUND_LANG}]}; do
+                    if [ "${val}" != "${EXTENSION}" ] ; then
+                        if [ -z "${EXTENSIONS_AFTER_REMOVE}" ]; then
+                            EXTENSIONS_AFTER_REMOVE="${val}"
+                        else
+                            EXTENSIONS_AFTER_REMOVE="${EXTENSIONS_AFTER_REMOVE} ${val}"
+                        fi
+                    fi
+                done
+                > ${EXTENSIONS_FILE_PATH}
+                write_ext_with_ommiting_given_lang ${NAME}
+                if [ ! -z "${EXTENSIONS_AFTER_REMOVE}" ]; then
+                    echo "${NAME}${EXTENSIONS_DELIMITER}${EXTENSIONS_AFTER_REMOVE}" >> ${EXTENSIONS_FILE_PATH}
+                    EXTENSIONS_DICT[${NAME}]=${EXTENSIONS_AFTER_REMOVE}
+                fi
+                echo "Correct removed: ${NAME}${EXTENSIONS_DELIMITER}${EXTENSION}"
             else
-                EXTENSIONS_AFTER_REMOVE="${EXTENSIONS_AFTER_REMOVE} ${val}"
+                echo "Config file doesn't contain <${NAME}|${EXTENSION}> element !"
+                if [ ! -z "${FOUND_LANG}" ]; then
+                    echo "<${EXTENSION}> is associated with: <${FOUND_LANG}>"
+                fi
             fi
+        else
+            echo "Param cannot be empty !"
         fi
     done
-    
-    > ${EXTENSIONS_FILE_PATH}
-    write_ext_with_ommiting_given_lang ${NAME}
-    if [ ! -z "${EXTENSIONS_AFTER_REMOVE}" ]; then
-        echo "${NAME}${EXTENSIONS_DELIMITER}${EXTENSIONS_AFTER_REMOVE}" >> ${EXTENSIONS_FILE_PATH}
-    fi
-    echo "Correct removed: ${NAME}${EXTENSIONS_DELIMITER}${EXTENSION}"
 }
 
 write_ext_with_ommiting_given_lang(){
@@ -141,16 +161,13 @@ write_ext_with_ommiting_given_lang(){
     done
 }
 
-check_correctness(){
+params_are_correct(){
     local NAME=${1}
     local EXTENSION=${2}
-    if [ -z ${NAME} ]; then
-        echo "Language name can't be empty !"
-        exit 1
-    fi
-    if [ -z ${EXTENSION} ]; then
-        echo "Extension name can't be empty !"
-        exit 1
+    if [ -z ${NAME} ] || [ -z ${EXTENSION} ]; then
+        echo false
+    else
+        echo true
     fi
 }
 
