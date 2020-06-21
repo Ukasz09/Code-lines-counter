@@ -8,13 +8,17 @@ declare -A RESULTS
 
 # controller ------------------------------------------------------------------------- #
 flag_processing(){
-    OPTSPEC=":arhl-:"
+    OPTSPEC=":arhld-:"
     while getopts "$OPTSPEC" optchar; do
         case "${optchar}" in
             -)
                 case "${OPTARG}" in
                     help)
                         show_help
+                    ;;
+                    dir)
+                        local DIR_PATH="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                        count_in_specific_dir ${DIR_PATH}
                     ;;
                     add_lang)
                         local NAME="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
@@ -45,7 +49,11 @@ flag_processing(){
                     ;;
             esac;;
             h)
-                showing_help
+                show_help
+            ;;
+            d)
+                local DIR_PATH="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                count_in_specific_dir ${DIR_PATH}
             ;;
             a)
                 local NAME="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
@@ -80,6 +88,12 @@ flag_processing(){
     if [ $OPTIND -eq 1 ]; then
         run_code_lines_report
     fi
+}
+
+count_in_specific_dir(){
+    cd ${1} || exit 1
+    run_code_lines_report
+    cd -
 }
 
 show_lang_list(){
