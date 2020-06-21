@@ -2,7 +2,6 @@
 HOME=$(eval echo ~${SUDO_USER}) # for proper work with sudo
 EXTENSIONS_FILE_PATH=${HOME}"/code_lines_report/extensions.txt"
 LANG_EXT_DELIMITER="|"
-FUNC_RETURN_TRUE=false
 
 declare -A EXTENSIONS_DICT
 declare -A results
@@ -77,12 +76,25 @@ adding_lang(){
     local EXTENSION=${2}
     check_lang_and_ext_correctness ${NAME} ${EXTENSION}
     read_available_extensions
-    extensions_dict_contains_val ${EXTENSION}
-    if ${FUNC_RETURN_TRUE}; then
+    local ACTUAL_LANG_NAME=$(extensions_dict_contains_val ${EXTENSION})
+    if [ ! -z "${ACTUAL_LANG_NAME}" ]; then
         echo "This language extension already exist in config file !"
         exit 1
     fi
-    echo "${NAME}${LANG_EXT_DELIMITER}${EXTENSION}" >> ${EXTENSIONS_FILE_PATH}
+    
+    if [ -z "${EXTENSIONS_DICT[${NAME}]}" ]; then
+        echo "${NAME}${LANG_EXT_DELIMITER}${EXTENSION}" >> ${EXTENSIONS_FILE_PATH}
+    else
+        > ${EXTENSIONS_FILE_PATH}
+        for key in ${!EXTENSIONS_DICT[@]}; do
+            if [ "${key}" != "${NAME}" ] ; then
+                values=${EXTENSIONS_DICT[${key}]}
+                echo "${key}${LANG_EXT_DELIMITER}${values}" >> ${EXTENSIONS_FILE_PATH}
+            else
+                echo "${key}${LANG_EXT_DELIMITER}${EXTENSIONS_DICT[$NAME]} ${EXTENSION}" >> ${EXTENSIONS_FILE_PATH}
+            fi
+        done
+    fi
     echo "Added: " ${NAME} "|" ${EXTENSION}
 }
 
@@ -91,17 +103,29 @@ removing_lang(){
     local EXTENSION=${2}
     check_lang_and_ext_correctness ${NAME} ${EXTENSION}
     read_available_extensions
-    
-    if [ "${EXTENSIONS_DICT[${NAME}]}" != "${EXTENSION}" ]; then
-        echo "Config file doesn't contain such element !"
+    local ACTUAL_LANG_NAME=$(extensions_dict_contains_val ${EXTENSION})
+    if [ "${ACTUAL_LANG_NAME}" != "${NAME}" ]; then
+        echo "Config file doesn't contain <${NAME}|${EXTENSION}> element !"
         exit 1
     fi
     
+    val_after_remove=""
+    for val in ${EXTENSIONS_DICT[${ACTUAL_LANG_NAME}]}; do
+        if [ "${val}" != "${EXTENSION}" ] ; then
+            val_after_remove="${val_after_remove} ${val}"
+        fi
+    done
+    val_after_remove=$(echo ${val_after_remove} | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+    
     > ${EXTENSIONS_FILE_PATH}
     for key in ${!EXTENSIONS_DICT[@]}; do
-        value=${EXTENSIONS_DICT[${key}]}
-        if [ "${value}" != "${EXTENSION}" ] ; then
-            echo "${key}${LANG_EXT_DELIMITER}${value}" >> ${EXTENSIONS_FILE_PATH}
+        if [ "${key}" != "${NAME}" ] ; then
+            values=${EXTENSIONS_DICT[${key}]}
+            echo "${key}${LANG_EXT_DELIMITER}${values}" >> ${EXTENSIONS_FILE_PATH}
+        else
+            if [ ! -z "${val_after_remove}" ]; then
+                echo "${key}${LANG_EXT_DELIMITER}${val_after_remove}" >> ${EXTENSIONS_FILE_PATH}
+            fi
         fi
     done
     echo "Correct removed: ${NAME}${LANG_EXT_DELIMITER}${EXTENSION}"
@@ -123,12 +147,14 @@ check_lang_and_ext_correctness(){
 extensions_dict_contains_val(){
     local VALUE=${1}
     for key in ${!EXTENSIONS_DICT[@]}; do
-        if [ "${EXTENSIONS_DICT[${key}]}" == "${VALUE}" ] ; then
-            FUNC_RETURN_TRUE=true
-            return
-        fi
+        for val in ${EXTENSIONS_DICT[${key}]}; do
+            if [ "${val}" == "${VALUE}" ] ; then
+                echo ${key}
+                return
+            fi
+        done
     done
-    FUNC_RETURN_TRUE=false
+    echo ""
 }
 
 incorrect_flag_msg(){
@@ -140,7 +166,7 @@ incorrect_flag_msg(){
 read_available_extensions(){
     while read line; do
         name=$(echo $line | cut -d "|" -f1 | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-        ext=$(echo $line | cut -d "|" -f2 | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+        ext=$(echo $line | cut -d "|" -f 2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
         EXTENSIONS_DICT[$name]="$ext"
     done < ${EXTENSIONS_FILE_PATH}
 }
@@ -187,7 +213,8 @@ print_results(){
     done | sort -r -t : -n -k 2
 }
 
-read_available_extensions
+# read_available_extensions
+
 flag_processing $@
 # jupyter_to_scripts
 # calc_results
@@ -196,4 +223,3 @@ flag_processing $@
 # for key in ${!EXTENSIONS_DICT[@]}; do
 # echo ${key} ":" ${EXTENSIONS_DICT[${key}]}
 # done
-
