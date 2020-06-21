@@ -5,27 +5,7 @@ EXTENSIONS_FILE_PATH=${HOME}"/code_lines_report/extensions.txt"
 declare -A extensions
 declare -A results
 
-# ---------------------------------------------------------------------------------------------------------------- #
-showing_help(){
-    echo "Here is showing help..."
-}
-
-adding_lang(){
-    # val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-    # echo "Parsing option: '--${OPTARG}', value: '${val}'" >&2;
-    echo "Here processing of add flag"
-}
-
-removing_lang(){
-    echo "Here processing of remove flag"
-}
-
-incorrect_flag_msg(){
- FLAG=${1}
- echo "Unknown option --${FLAG}" >&2
-}
-
-
+# controller ------------------------------------------------------------------------- #
 flag_processing(){
     OPTSPEC=":arh-:"
     while getopts "$OPTSPEC" optchar; do
@@ -37,16 +17,20 @@ flag_processing(){
                         exit 0
                     ;;
                     add_lang)
-                        adding_lang
+                        local NAME="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                        local EXTENSION="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                        adding_lang ${NAME} ${EXTENSION}
                         exit 0
                     ;;
                     remove_lang)
-                        removing_lang
+                        local NAME="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                        local EXTENSION="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                        removing_lang ${NAME} ${EXTENSION}
                         exit 0
                     ;;
                     *)
-                        if [ "$OPTERR" = 1 ] && [ "${OPTSPEC:0:1}" != ":" ]; then
-                            incorrect_flag_msg ${OPTARG}
+                        if [ "$OPTERR" != 1 ] || [ "${OPTSPEC:0:1}" = ":" ]; then
+                            incorrect_flag_msg '--'${OPTARG}
                         fi
                         exit 1
                     ;;
@@ -56,27 +40,69 @@ flag_processing(){
                 exit 0
             ;;
             a)
-                # echo "Parsing option: '-${optchar}'" >&2
-                adding_lang
+                local NAME="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                local EXTENSION="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                adding_lang ${NAME} ${EXTENSION}
                 exit 0
             ;;
             r)
-                # echo "Parsing option: '-${optchar}'" >&2
-                removing_lang
+                local NAME="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                local EXTENSION="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                removing_lang ${NAME} ${EXTENSION}
                 exit 0
             ;;
             *)
                 if [ "$OPTERR" != 1 ] || [ "${OPTSPEC:0:1}" = ":" ]; then
-                    incorrect_flag_msg ${OPTARG}
+                    incorrect_flag_msg '-'${OPTARG}
                 fi
+                exit 1
             ;;
         esac
     done
     
-    if [ $OPTIND -eq 1 ]; then echo "No options were passed"; fi
+    # if no flag given
+    if [ $OPTIND -eq 1 ]; then
+        run_code_lines_report
+    fi
 }
 
+showing_help(){
+    echo "Here's showing help..." # TODO
+}
 
+adding_lang(){
+    local NAME=${1}
+    local EXTENSION=${2}
+    check_lang_and_ext_correctness ${NAME} ${EXTENSION}
+    echo "Here's processing of adding " ${NAME} ":" ${EXTENSION} # TODO
+}
+
+removing_lang(){
+    local NAME=${1}
+    local EXTENSION=${2}
+    check_lang_and_ext_correctness ${NAME} ${EXTENSION}
+    echo "Here's processing of removing " ${NAME} ":" ${EXTENSION} # TODO
+}
+
+check_lang_and_ext_correctness(){
+    local NAME=${1}
+    local EXTENSION=${2}
+    if [ -z ${NAME} ]; then
+        echo "Language name can't be empty !"
+        exit 1
+    fi
+    if [ -z ${EXTENSION} ]; then
+        echo "Extension name can't be empty !"
+        exit 1
+    fi
+}
+
+incorrect_flag_msg(){
+    local FLAG=${1}
+    echo "Unknown option ${FLAG}" >&2
+}
+
+# logic ----------------------------------------------------------------------------- #
 read_available_extensions(){
     while read line; do
         name=$(echo $line | cut -d "|" -f1 | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
@@ -85,10 +111,8 @@ read_available_extensions(){
     done < ${EXTENSIONS_FILE_PATH}
 }
 
-
-##########
 run_code_lines_report(){
-    # todo
+    echo "Running report" # TODO
 }
 
 
