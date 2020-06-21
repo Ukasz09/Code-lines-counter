@@ -5,6 +5,78 @@ EXTENSIONS_FILE_PATH=${HOME}"/code_lines_report/extensions.txt"
 declare -A extensions
 declare -A results
 
+# ---------------------------------------------------------------------------------------------------------------- #
+showing_help(){
+    echo "Here is showing help..."
+}
+
+adding_lang(){
+    # val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+    # echo "Parsing option: '--${OPTARG}', value: '${val}'" >&2;
+    echo "Here processing of add flag"
+}
+
+removing_lang(){
+    echo "Here processing of remove flag"
+}
+
+incorrect_flag_msg(){
+ FLAG=${1}
+ echo "Unknown option --${FLAG}" >&2
+}
+
+
+flag_processing(){
+    OPTSPEC=":arh-:"
+    while getopts "$OPTSPEC" optchar; do
+        case "${optchar}" in
+            -)
+                case "${OPTARG}" in
+                    help)
+                        showing_help
+                        exit 0
+                    ;;
+                    add_lang)
+                        adding_lang
+                        exit 0
+                    ;;
+                    remove_lang)
+                        removing_lang
+                        exit 0
+                    ;;
+                    *)
+                        if [ "$OPTERR" = 1 ] && [ "${OPTSPEC:0:1}" != ":" ]; then
+                            incorrect_flag_msg ${OPTARG}
+                        fi
+                        exit 1
+                    ;;
+            esac;;
+            h)
+                showing_help
+                exit 0
+            ;;
+            a)
+                # echo "Parsing option: '-${optchar}'" >&2
+                adding_lang
+                exit 0
+            ;;
+            r)
+                # echo "Parsing option: '-${optchar}'" >&2
+                removing_lang
+                exit 0
+            ;;
+            *)
+                if [ "$OPTERR" != 1 ] || [ "${OPTSPEC:0:1}" = ":" ]; then
+                    incorrect_flag_msg ${OPTARG}
+                fi
+            ;;
+        esac
+    done
+    
+    if [ $OPTIND -eq 1 ]; then echo "No options were passed"; fi
+}
+
+
 read_available_extensions(){
     while read line; do
         name=$(echo $line | cut -d "|" -f1 | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
@@ -13,7 +85,12 @@ read_available_extensions(){
     done < ${EXTENSIONS_FILE_PATH}
 }
 
+
 ##########
+run_code_lines_report(){
+    # todo
+}
+
 
 count_lines(){
     fdfind -e $1 -x wc -l | awk '{total += $1} END {print total}'
@@ -53,11 +130,12 @@ print_results(){
 }
 
 read_available_extensions
+flag_processing $@
 # jupyter_to_scripts
 # calc_results
 # calc_cpp_results
 # print_results
-for key in ${!extensions[@]}; do
-    echo ${key} ":" ${extensions[${key}]}
-done
+# for key in ${!extensions[@]}; do
+# echo ${key} ":" ${extensions[${key}]}
+# done
 
