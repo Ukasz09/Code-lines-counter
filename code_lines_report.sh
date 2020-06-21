@@ -1,8 +1,10 @@
 #!/bin/bash
 HOME=$(eval echo ~${SUDO_USER}) # for proper work with sudo
 EXTENSIONS_FILE_PATH=${HOME}"/code_lines_report/extensions.txt"
+LANG_EXT_DELIMITER="|"
+FUNC_RETURN_TRUE=false
 
-declare -A extensions
+declare -A EXTENSIONS_DICT
 declare -A results
 
 # controller ------------------------------------------------------------------------- #
@@ -74,7 +76,14 @@ adding_lang(){
     local NAME=${1}
     local EXTENSION=${2}
     check_lang_and_ext_correctness ${NAME} ${EXTENSION}
-    echo "Here's processing of adding " ${NAME} ":" ${EXTENSION} # TODO
+    read_available_extensions
+    extensions_dict_contains_val ${EXTENSION}
+    if ${FUNC_RETURN_TRUE}; then
+        echo "This language extension already exist in config file !"
+        exit 1
+    fi
+    echo "${NAME}${LANG_EXT_DELIMITER}${EXTENSION}" >> ${EXTENSIONS_FILE_PATH}
+    echo "Added: " ${NAME} "|" ${EXTENSION}
 }
 
 removing_lang(){
@@ -97,6 +106,17 @@ check_lang_and_ext_correctness(){
     fi
 }
 
+extensions_dict_contains_val(){
+    local VALUE=${1}
+    for key in ${!EXTENSIONS_DICT[@]}; do
+        if [ "${EXTENSIONS_DICT[${key}]}" == "${VALUE}" ] ; then
+            FUNC_RETURN_TRUE=true
+            return
+        fi
+    done
+    FUNC_RETURN_TRUE=false
+}
+
 incorrect_flag_msg(){
     local FLAG=${1}
     echo "Unknown option ${FLAG}" >&2
@@ -107,7 +127,7 @@ read_available_extensions(){
     while read line; do
         name=$(echo $line | cut -d "|" -f1 | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
         ext=$(echo $line | cut -d "|" -f2 | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-        extensions[$name]="$ext"
+        EXTENSIONS_DICT[$name]="$ext"
     done < ${EXTENSIONS_FILE_PATH}
 }
 
@@ -138,8 +158,8 @@ calc_cpp_results(){
 }
 
 calc_results(){
-    for key in ${!extensions[@]}; do
-        qty=$(count_lines ${extensions[${key}]})
+    for key in ${!EXTENSIONS_DICT[@]}; do
+        qty=$(count_lines ${EXTENSIONS_DICT[${key}]})
         if [ -z "${qty}" ]; then
             qty=0
         fi
@@ -159,7 +179,7 @@ flag_processing $@
 # calc_results
 # calc_cpp_results
 # print_results
-# for key in ${!extensions[@]}; do
-# echo ${key} ":" ${extensions[${key}]}
+# for key in ${!EXTENSIONS_DICT[@]}; do
+# echo ${key} ":" ${EXTENSIONS_DICT[${key}]}
 # done
 
