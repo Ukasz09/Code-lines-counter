@@ -90,7 +90,21 @@ removing_lang(){
     local NAME=${1}
     local EXTENSION=${2}
     check_lang_and_ext_correctness ${NAME} ${EXTENSION}
-    echo "Here's processing of removing " ${NAME} ":" ${EXTENSION} # TODO
+    read_available_extensions
+    
+    if [ "${EXTENSIONS_DICT[${NAME}]}" != "${EXTENSION}" ]; then
+        echo "Config file doesn't contain such element !"
+        exit 1
+    fi
+    
+    > ${EXTENSIONS_FILE_PATH}
+    for key in ${!EXTENSIONS_DICT[@]}; do
+        value=${EXTENSIONS_DICT[${key}]}
+        if [ "${value}" != "${EXTENSION}" ] ; then
+            echo "${key}${LANG_EXT_DELIMITER}${value}" >> ${EXTENSIONS_FILE_PATH}
+        fi
+    done
+    echo "Correct removed: ${NAME}${LANG_EXT_DELIMITER}${EXTENSION}"
 }
 
 check_lang_and_ext_correctness(){
