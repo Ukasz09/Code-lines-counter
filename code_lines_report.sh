@@ -8,7 +8,7 @@ declare -A RESULTS
 
 # controller ------------------------------------------------------------------------- #
 flag_processing(){
-    OPTSPEC=":arh-:"
+    OPTSPEC=":arhl-:"
     while getopts "$OPTSPEC" optchar; do
         case "${optchar}" in
             -)
@@ -33,6 +33,9 @@ flag_processing(){
                             OPTIND=$(( $OPTIND + 1 ))
                         done
                         remove_lang ${NAME} ${EXT}
+                    ;;
+                    list)
+                        show_lang_list
                     ;;
                     *)
                         if [ "$OPTERR" != 1 ] || [ "${OPTSPEC:0:1}" = ":" ]; then
@@ -62,6 +65,9 @@ flag_processing(){
                 done
                 remove_lang ${NAME} ${EXT}
             ;;
+            l)
+                show_lang_list
+            ;;
             *)
                 if [ "$OPTERR" != 1 ] || [ "${OPTSPEC:0:1}" = ":" ]; then
                     incorrect_flag_msg '-'${OPTARG}
@@ -74,6 +80,15 @@ flag_processing(){
     if [ $OPTIND -eq 1 ]; then
         run_code_lines_report
     fi
+}
+
+show_lang_list(){
+    echo
+    echo "Available languages and extensions:"
+    echo "-----------------------------------"
+    cat ${EXTENSIONS_FILE_PATH}
+    echo
+    
 }
 
 show_help(){
