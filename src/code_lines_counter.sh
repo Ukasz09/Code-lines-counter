@@ -1,6 +1,10 @@
 #!/bin/bash
+
+# Copyright Łukasz Gajerski (https://github.com/Ukasz09)
+# MIT LICENCE
+
 HOME=$(eval echo ~${SUDO_USER}) # for proper work with sudo
-EXTENSIONS_FILE_PATH=${HOME}"/code_lines_report/extensions.txt"
+EXTENSIONS_FILE_PATH=${HOME}"/code_lines_counter/extensions.txt"
 EXTENSIONS_DELIMITER="|"
 
 declare -A EXTENSIONS_DICT
