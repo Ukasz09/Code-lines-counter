@@ -1,0 +1,24 @@
+Assembly|asm
+Batch|bat
+Shell|sh
+C|c ino
+C++|cpp cxx cc
+C/C++ headers|h hpp hxx
+Objective-C|m
+HTML|html htm shtml
+Java|java
+JavaScript|js
+Perl|pl
+C#|cs
+PHP|php
+LUA|lua
+RUBY|rb
+COBOL|cbl
+ELIXIR|exs
+SQL|sql
+PostgreSql|pgsql
+PowerShell|ps1
+Python|py
+OCaml|ml
+CSS|scss css
+Markdown|md

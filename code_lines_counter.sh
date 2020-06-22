@@ -92,9 +92,15 @@ flag_processing(){
 
 show_lang_list(){
     echo
-    echo "Available languages and extensions:"
-    echo "-----------------------------------"
-    cat ${EXTENSIONS_FILE_PATH}
+    echo "==================================="
+    echo "AVAILABLE LANGUAGES AND EXTENSIONS:"
+    echo "==================================="
+    local IFS=$'\n'
+    for i in $(cat ${EXTENSIONS_FILE_PATH} | sort); do
+        local LANG=$(echo $i | cut -d "|" -f1)
+        local EXT=$(echo $i | cut -d "|" -f 2-)
+        printf "%-15s : %s\n" $LANG $EXT
+    done
     echo
     
 }
@@ -225,6 +231,7 @@ read_available_extensions(){
         local ext=$(echo $line | cut -d "|" -f 2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
         EXTENSIONS_DICT[$name]="$ext"
     done < ${EXTENSIONS_FILE_PATH}
+    sort -o ${EXTENSIONS_FILE_PATH} ${EXTENSIONS_FILE_PATH}
 }
 
 run_code_lines_report(){
