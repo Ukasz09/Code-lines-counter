@@ -1,15 +1,14 @@
 # :mag_right: Code lines counter [![License](https://img.shields.io/badge/licence-MIT-blue)](https://choosealicense.com/licenses/mit/) [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-orange.svg)](https://github.com/Ukasz09/Code-lines-counter)
 
-> Generate summary of written lines of code
+> Generate a summary report of written lines of code (Bash)
 
-**code_lines_counter** is a simple tool used to generate report about written lines of code found in given directory with all sub-directories
+**code_lines_counter** is a simple tool used to generate report about written lines of code for given directory, with all sub-directories
 
-
-## EXAMPLES
+## Examples
 
 - **Counting lines**
 
-| For actual dir | For given specific dir |
+| For actual directory | For given specific directory |
 | -------- | ------- |
 | ![](/doc/images/counter_norm.png) | ![](/doc/images/counter_specific.png) |
 
@@ -17,38 +16,32 @@
 
 ![](/doc/images/extensions.png)
 
-*You can add new extension/extensions with corresponding language_name ([MANUAL](https://github.com/Ukasz09/Code-lines-counter/wiki/MANUAL-PAGE))*
+*You can add new extension / extensions with corresponding language_name if you need it ([MANUAL](https://github.com/Ukasz09/Code-lines-counter/wiki/MANUAL-PAGE))*
 
 - **Excluded files / directories from counting**
 
 ![](/doc/images/ignored.png)
 
 
-*Add extra ignored files / directories ([MANUAL](https://github.com/Ukasz09/Code-lines-counter/wiki/MANUAL-PAGE))*
+*Yoou can add extra ignored files / directories if you need it ([MANUAL](https://github.com/Ukasz09/Code-lines-counter/wiki/MANUAL-PAGE))*
 
 ## Distinguishing features
 
 - `Jupyter Notebook` support (correct counting lines of code inside `.ipynb` files)
 - Automatically excluding all files / localizations from `.gitignore` files found inside searched directories
-- Possibility of adding / removing additional localizations / files to exclude from searching
+- Possibility of adding / removing additional localizations / files to exclude from counting
 - Possibility of adding / removing any file extensions with associated languages / names
 
 ## Manual Page
 
-You can find full manual page ([HERE](https://github.com/Ukasz09/Code-lines-counter/wiki))<br/> or just type in terminal: <br/>
+You can find full manual page ([here](https://github.com/Ukasz09/Code-lines-counter/wiki))<br/> or just type in terminal any of this: <br/>
 
 ```bash
     info code_lines_counter 
 ```
-
-or
-
 ```bash
     man code_lines_counter 
 ```
-
-or
-
 ```bash
     code_lines_counter --help 
 ```
@@ -58,13 +51,13 @@ or
 
 ## Setup
 
-This tools is build by using ([fd-find app](https://github.com/sharkdp/fd)). First you need to make sure that you have installed it.
-([Original fd-find installation steps](https://github.com/sharkdp/fd#installation)) - In most case it can by done by typing:
+This tool use ([fd-find app](https://github.com/sharkdp/fd)) shell app. First of all, you need to make sure that you have installed it.
+([Original fd-find installation steps](https://github.com/sharkdp/fd#installation)) - In most cases it can by done by typing:
 
 ```bash
     sudo apt install fd-find
 ```
-After that we are ready to install `code_lines_counter`:
+After that you are ready to install `code_lines_counter`:
 
 ```bash
     git clone https://github.com/Ukasz09/Code-lines-counter.git
@@ -74,7 +67,7 @@ After that we are ready to install `code_lines_counter`:
 
 ## How to use it?
 
-Go to folder in which you want to count lines of code and simply type:
+Go to directory in which you want to count lines of code and simply type:
 ```bash
     code_lines_counter
 ```
@@ -84,9 +77,7 @@ You can also specify directory by typing:
 ```bash
     code_lines_counter -d path/to/parent/directory/
 ```
-
 or
-
 ```bash
     code_lines_counter --dir path/to/parent/directory/
 ```
