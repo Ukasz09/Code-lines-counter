@@ -2,8 +2,7 @@ Assembly|asm
 Batch|bat
 Shell|sh
 C|c ino
-C++|cpp cxx cc
-C/C++ headers|h hpp hxx
+C++|cpp cxx cc h hpp hxx
 Objective-C|m
 HTML|html htm shtml
 Java|java
