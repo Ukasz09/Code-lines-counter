@@ -2,26 +2,27 @@
 .\" Copyright Łukasz Gajerski (https://github.com/Ukasz09)
 .TH code_lines_counter
 .SH NAME
-code_lines_counter \- generate summary of written lines of code (and not only)   
+code_lines_counter \- Generate a summary report of written lines of code (and not only)   
 .SH SYNOPSIS
 .B code_lines_counter
 .RB [ OPTIONS ]
 .SH DESCRIPTION
 .B code_lines_counter
-is a simple tool used to generate report about written lines of code, in every language (from config file), found in given directory with all sub-directories 
+is a simple tool used to generate report about written lines of code for given directory, with all sub-directories 
 .SH REMARKS
-Line counter exclude all stuff described in 
+Line counter exclude all stuff described in
 .B .gitignore 
+files inside processed directory. In case of excluding files that you don't want to take into account during the counting, you need to add it to this .gitignore files or you can just add excludeed localizations by using
 files inside searched directory. By adding this file to viewed directory you can easly exclude files that you don't want to take into account during the counting
 If you want to exclude extra files without changing .gitignore files inside searched directories, you can easily to this by OPTION
 .B \-\-add-ignored
 .SH OPTIONS
 .TP
 .BI "\-a, \-\-add-lang "[language_name][extension1]<extension2> ... 
-Add new extension/extensions with corresponding language_name to config file.
+Add new extension / extensions with corresponding language_name to config file
 .TP
 .BI "\-r, \-\-remove-lang "[language_name][extension1]<extension2> ...
-Remove extension/extensions with assigned language_name from config file.
+Remove extension / extensions with assigned language_name from config file.
 .TP
 .B \-l, \-\-list
 Print all saved languages with assigned extensions, from config file 
@@ -33,7 +34,7 @@ Print report with lines of code for given directory with all sub-directories
 Display this man page
 .TP
 .BI "\-\-add-ignored "[localization/file]<localization/file> ... 
-Add extra ignored files / directories to 
+Add excludeed files / directories from counting process
 .B code_lines_counter
 
 (Take into consideration that
@@ -41,7 +42,7 @@ Add extra ignored files / directories to
 automatically exclude all files / localizations from .gitignore files inside searched directory !)
 .TP
 .BI "\-\-remove-ignored "[localization/file]<localization/file> ... 
-Remove extra ignored files / directories 
+Readd excludeed files / directories from counting process
 .B code_lines_counter 
 
 (Take into consideration that
