@@ -16,6 +16,7 @@ install:
 	cp "src/${EXTENSIONS_NAME}.txt" "${HOME}/${BIN_NAME}/${EXTENSIONS_NAME}.txt"
 	cp "src/.gitignore" "${HOME}/${BIN_NAME}/.gitignore"
 	chmod -R 777 "${HOME}/${BIN_NAME}"
+	cp "src/${BIN_NAME}" "/etc/bash_completion.d"
 
 uninstall:
 	rm "/usr/bin/${BIN_NAME}"

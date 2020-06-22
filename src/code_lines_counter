@@ -1,0 +1,14 @@
+_code_lines_counter() 
+{
+    local cur prev opts
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    opts="--add-lang --help --remove-lang --list --dir --help --add-ignored --remove-ignored --show-ignored"
+
+    if [[ ${cur} == -* ]] ; then
+        COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+        return 0
+    fi
+}
+complete -o nospace -F _code_lines_counter code_lines_counter
