@@ -272,7 +272,7 @@ print_results(){
     divider="===================="
     divider=${divider}${divider}
     header="\n | %-10s | %10s | \n"
-    format=" | %-10s | %10i | \n"
+    format=" | %-10s : %10i | \n"
     width=27
     
     echo
