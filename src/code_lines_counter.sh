@@ -5,7 +5,9 @@
 
 HOME=$(eval echo ~${SUDO_USER}) # for proper work with sudo
 EXTENSIONS_FILE_PATH=${HOME}"/code_lines_counter/extensions.txt"
+EXTRA_GITIGNORE=${HOME}"/code_lines_counter/.gitignore"
 EXTENSIONS_DELIMITER="|"
+TOTAL_LINES_QTY=0
 
 declare -A EXTENSIONS_DICT
 declare -A RESULTS
@@ -242,13 +244,14 @@ run_code_lines_report(){
     read_available_extensions
     jupyter_to_scripts
     calc_results
+    calc_total_lines_qty
     print_results
     clear_jupyter_tmp_files
 }
 
 # convert all jupter files to scripts
 jupyter_to_scripts(){
-    fdfind -e "ipynb" -x jupyter nbconvert --to script --log-level=0 --output-dir=./code_counter_tmp/{//} {}
+    fdfind --ignore-file ${EXTRA_GITIGNORE} -e "ipynb" -x jupyter nbconvert --to script --log-level=0 --output-dir=./code_counter_tmp/{//} {}
 }
 
 calc_results(){
@@ -265,7 +268,14 @@ calc_results(){
 }
 
 count_lines(){
-    fdfind -e $1 -x wc -l | awk '{total += $1} END {print total}'
+    fdfind --ignore-file ${EXTRA_GITIGNORE} -e ${1} -x wc -l | awk '{total += $1} END {print total}'
+}
+
+calc_total_lines_qty(){
+    TOTAL_LINES_QTY=0
+    for key in ${!RESULTS[@]}; do
+        TOTAL_LINES_QTY=$((${TOTAL_LINES_QTY} + ${RESULTS[${key}]}))
+    done
 }
 
 print_results(){
@@ -283,11 +293,14 @@ print_results(){
         printf "${format}" ${key} ${RESULTS[${key}]}
     done | sort -r -t : -n -k 2
     printf " %${width}.${width}s\n" "${divider}"
+    printf "${format}" "TOTAL" ${TOTAL_LINES_QTY}
+    printf " %${width}.${width}s" "${divider}"
+    echo
     echo
 }
 
 clear_jupyter_tmp_files(){
-    rm -r ./code_counter_tmp
+    if [ -d "./code_counter_tmp" ]; then rm -r ./code_counter_tmp; fi
 }
 
 # main ----------------------------------------------------------------------------- #

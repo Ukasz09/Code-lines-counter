@@ -1,8 +1,7 @@
 Assembly|asm
 Batch|bat
 Shell|sh
-C|c ino
-C++|cpp cxx cc h hpp hxx
+C/C++|cpp cxx cc h hpp hxx c ino
 Objective-C|m
 HTML|html htm shtml
 Java|java
@@ -18,6 +17,7 @@ SQL|sql
 PostgreSql|pgsql
 PowerShell|ps1
 Python|py
+Scala|scala
 OCaml|ml
 CSS|scss css
 Markdown|md

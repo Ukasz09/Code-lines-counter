@@ -14,8 +14,9 @@ install:
 	chmod 644 "${MANPREFIX}/man/man1/${BIN_NAME}.1"
 	mkdir -p "${HOME}/${BIN_NAME}"
 	cp "src/${EXTENSIONS_NAME}.txt" "${HOME}/${BIN_NAME}/${EXTENSIONS_NAME}.txt"
+	cp "src/.gitignore" "${HOME}/${BIN_NAME}/.gitignore"
 	chmod -R 777 "${HOME}/${BIN_NAME}"
-	
+
 uninstall:
 	rm "/usr/bin/${BIN_NAME}"
 	rm "$(MANPREFIX)/man/man1/${BIN_NAME}.1"
