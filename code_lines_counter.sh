@@ -231,7 +231,7 @@ run_code_lines_report(){
     read_available_extensions
     jupyter_to_scripts
     calc_results
-    print_results   
+    print_results
     clear_jupyter_tmp_files
 }
 
@@ -258,13 +258,26 @@ count_lines(){
 }
 
 print_results(){
+    divider="===================="
+    divider=${divider}${divider}
+    header="\n | %-10s | %10s | \n"
+    format=" | %-10s | %10i | \n"
+    width=27
+    
+    echo
+    printf " %${width}.${width}s" "${divider}"
+    printf "${header}" "LANGUAGE" "LINES_QTY"
+    printf " %${width}.${width}s\n" "${divider}"
     for key in ${!RESULTS[@]}; do
-        echo ${key} ": " ${RESULTS[${key}]}
+        printf "${format}" ${key} ${RESULTS[${key}]}
     done | sort -r -t : -n -k 2
+    printf " %${width}.${width}s\n" "${divider}"
+    echo
 }
 
 clear_jupyter_tmp_files(){
     rm -r ./code_counter_tmp
 }
 
+# main ----------------------------------------------------------------------------- #
 flag_processing $@
