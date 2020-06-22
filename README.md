@@ -1,4 +1,4 @@
-# :mag_right: Code-lines-counter [![License](https://img.shields.io/badge/licence-MIT-blue)](https://choosealicense.com/licenses/mit/) [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-orange.svg)](https://github.com/Ukasz09/Code-lines-counter)
+# :mag_right: Code lines counter [![License](https://img.shields.io/badge/licence-MIT-blue)](https://choosealicense.com/licenses/mit/) [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-orange.svg)](https://github.com/Ukasz09/Code-lines-counter)
 
 > Generate summary of written lines of code
 
@@ -17,10 +17,14 @@
 
 ![](/doc/images/extensions.png)
 
+*You can add new extension/extensions with corresponding language_name ([MANUAL](https://github.com/Ukasz09/Code-lines-counter/wiki/MANUAL-PAGE))*
+
 - **Excluded files / directories from counting**
 
 ![](/doc/images/ignored.png)
 
+
+*Add extra ignored files / directories ([MANUAL](https://github.com/Ukasz09/Code-lines-counter/wiki/MANUAL-PAGE))*
 
 ## Distinguishing features
 
@@ -31,13 +35,12 @@
 
 ## Manual Page
 
-You can find full manual page ([HERE](https://github.com/Ukasz09/Code-lines-counter/wiki))<br/> 
-
-You can also just type in terminal: <br/>
+You can find full manual page ([HERE](https://github.com/Ukasz09/Code-lines-counter/wiki))<br/> or just type in terminal: <br/>
 
 ```bash
     info code_lines_counter 
 ```
+
 or
 
 ```bash
@@ -56,10 +59,7 @@ or
 ## Setup
 
 This tools is build by using ([fd-find app](https://github.com/sharkdp/fd)). First you need to make sure that you have installed it.
-
-([Original fd-find installation steps](https://github.com/sharkdp/fd#installation))
-
-In most case it can by done by typing:
+([Original fd-find installation steps](https://github.com/sharkdp/fd#installation)) - In most case it can by done by typing:
 
 ```bash
     sudo apt install fd-find
@@ -91,8 +91,7 @@ or
     code_lines_counter --dir path/to/parent/directory/
 ```
 
-All others available flags you can find in manual (link)
-
+All others available flags you can find in ([manual](https://github.com/Ukasz09/Code-lines-counter#manual-page))
 ___
 ## 📫 Contact 
 Created by <br/>
