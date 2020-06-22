@@ -90,12 +90,6 @@ flag_processing(){
     fi
 }
 
-count_in_specific_dir(){
-    cd ${1} || exit 1
-    run_code_lines_report
-    cd -
-}
-
 show_lang_list(){
     echo
     echo "Available languages and extensions:"
@@ -106,7 +100,7 @@ show_lang_list(){
 }
 
 show_help(){
-    echo "Here's showing help..." # TODO
+    man code_lines_counter
 }
 
 add_lang(){
@@ -219,6 +213,12 @@ incorrect_flag_msg(){
 }
 
 # logic ----------------------------------------------------------------------------- #
+count_in_specific_dir(){
+    cd ${1} || exit 1
+    run_code_lines_report
+    cd - > /dev/null
+}
+
 read_available_extensions(){
     while read line; do
         local name=$(echo $line | cut -d "|" -f1 | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
@@ -228,39 +228,33 @@ read_available_extensions(){
 }
 
 run_code_lines_report(){
-    echo "Running report" # TODO
-}
-
-
-count_lines(){
-    fdfind -e $1 -x wc -l | awk '{total += $1} END {print total}'
+    read_available_extensions
+    jupyter_to_scripts
+    calc_results
+    print_results   
+    clear_jupyter_tmp_files
 }
 
 # convert all jupter files to scripts
 jupyter_to_scripts(){
-    fdfind -e "ipynb" -x jupyter nbconvert --to script --log-level=0
-}
-
-# because need more than one file extension
-calc_cpp_results(){
-    cpp_extensions=("cpp" "h" "c" "ino" "hpp" "cmake")
-    cpp_qty=0
-    for ext in ${!cpp_extensions[*]}
-    do
-        lines_no=$(count_lines ${cpp_extensions[$ext]})
-        ((cpp_qty+=lines_no))
-    done
-    RESULTS["C/C++"]=${cpp_qty}
+    fdfind -e "ipynb" -x jupyter nbconvert --to script --log-level=0 --output-dir=./code_counter_tmp/{//} {}
 }
 
 calc_results(){
     for key in ${!EXTENSIONS_DICT[@]}; do
-        qty=$(count_lines ${EXTENSIONS_DICT[${key}]})
-        if [ -z "${qty}" ]; then
-            qty=0
+        qty=0
+        for ext in ${EXTENSIONS_DICT[${key}]}; do
+            lines_no=$(count_lines ${ext})
+            ((qty+=lines_no))
+        done
+        if [ ! "${qty}" -eq "0" ]; then
+            RESULTS[${key}]=${qty}
         fi
-        RESULTS[${key}]=${qty}
     done
+}
+
+count_lines(){
+    fdfind -e $1 -x wc -l | awk '{total += $1} END {print total}'
 }
 
 print_results(){
@@ -269,11 +263,8 @@ print_results(){
     done | sort -r -t : -n -k 2
 }
 
+clear_jupyter_tmp_files(){
+    rm -r ./code_counter_tmp
+}
+
 flag_processing $@
-# jupyter_to_scripts
-# calc_results
-# calc_cpp_results
-# print_results
-# for key in ${!EXTENSIONS_DICT[@]}; do
-# echo ${key} ":" ${EXTENSIONS_DICT[${key}]}
-# done
