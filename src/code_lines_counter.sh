@@ -26,7 +26,7 @@ flag_processing(){
                         local DIR_PATH="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
                         count_in_specific_dir ${DIR_PATH}
                     ;;
-                    add_lang)
+                    add-lang)
                         local NAME="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
                         EXT=""
                         until [[ ${!OPTIND} =~ ^-.* ]] || [ -z ${!OPTIND} ]; do
@@ -35,7 +35,7 @@ flag_processing(){
                         done
                         add_lang ${NAME} ${EXT}
                     ;;
-                    remove_lang)
+                    remove-lang)
                         local NAME="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
                         EXT=""
                         until [[ ${!OPTIND} =~ ^-.* ]] || [ -z ${!OPTIND} ]; do
@@ -46,6 +46,31 @@ flag_processing(){
                     ;;
                     list)
                         show_lang_list
+                    ;;
+                    show-ignored)
+                        echo
+                        echo "==================================="
+                        echo " IGNORED EXTRA FILES / DIRECTORIES "
+                        echo "==================================="
+                        cat ${EXTRA_GITIGNORE}
+                        echo "==================================="
+                        echo
+                    ;;
+                    remove-ignored)
+                        ARGS=""
+                        until [[ ${!OPTIND} =~ ^-.* ]] || [ -z ${!OPTIND} ]; do
+                            ARGS="${ARGS} ${!OPTIND}"
+                            OPTIND=$(( $OPTIND + 1 ))
+                        done
+                        remove_ignored ${ARGS}
+                    ;;
+                    add-ignored)
+                        ARGS=""
+                        until [[ ${!OPTIND} =~ ^-.* ]] || [ -z ${!OPTIND} ]; do
+                            ARGS="${ARGS} ${!OPTIND}"
+                            OPTIND=$(( $OPTIND + 1 ))
+                        done
+                        add_ignored ${ARGS}
                     ;;
                     *)
                         if [ "$OPTERR" != 1 ] || [ "${OPTSPEC:0:1}" = ":" ]; then
@@ -97,16 +122,22 @@ flag_processing(){
 }
 
 show_lang_list(){
+    divider="=========================================="
+    divider=${divider}${divider}
+    format=" | %-15s : %35s | \n"
+    width=57
+    
     echo
-    echo "==================================="
-    echo "AVAILABLE LANGUAGES AND EXTENSIONS:"
-    echo "==================================="
+    printf " %${width}.${width}s \n" "${divider}"
+    printf "   AVAILABLE LANGUAGES AND EXTENSIONS"
+    printf "\n %${width}.${width}s \n" "${divider}"
     local IFS=$'\n'
     for i in $(cat ${EXTENSIONS_FILE_PATH} | sort); do
         local LANG=$(echo $i | cut -d "|" -f1)
         local EXT=$(echo $i | cut -d "|" -f 2-)
-        printf "%-15s : %s\n" $LANG $EXT
+        printf ${format} ${LANG} ${EXT}
     done
+    printf " %${width}.${width}s" "${divider}"
     echo
     
 }
@@ -183,6 +214,28 @@ remove_lang(){
         else
             echo "Param cannot be empty !"
         fi
+    done
+}
+
+remove_ignored(){
+    local arr=()
+    for i in $(cat ${EXTRA_GITIGNORE}); do
+        if [[ ! "$@" =~ "${i}" ]]; then
+            arr+=(${i})
+        else
+            echo "Removed: ${i}"
+        fi
+    done
+    > ${EXTRA_GITIGNORE}
+    for i in "${arr[@]}"; do
+        echo ${i} >> ${EXTRA_GITIGNORE}
+    done
+}
+
+add_ignored(){
+    for i in "$@"; do
+        echo ${i} >> ${EXTRA_GITIGNORE}
+        echo "Added: ${i}"
     done
 }
 
@@ -281,9 +334,9 @@ calc_total_lines_qty(){
 print_results(){
     divider="===================="
     divider=${divider}${divider}
-    header="\n | %-10s | %10s | \n"
-    format=" | %-10s : %10i | \n"
-    width=27
+    header="\n | %-13s | %10s | \n"
+    format=" | %-13s : %10i | \n"
+    width=30
     
     echo
     printf " %${width}.${width}s" "${divider}"

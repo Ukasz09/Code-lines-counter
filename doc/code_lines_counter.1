@@ -13,14 +13,14 @@ is a simple tool used to generate report about written lines of code, in every l
 Line counter exclude all stuff described in 
 .B .gitignore 
 files inside searched directory. By adding this file to viewed directory you can easly exclude files that you don't want to take into account during the counting
-If you want to 
- 
+If you want to exclude extra files without changing .gitignore files inside searched directories, you can easily to this by OPTION
+.B \-\-add-ignored
 .SH OPTIONS
 .TP
-.BI "\-a, \-\-add_lang "[language_name][extension1]<extension2> ... 
+.BI "\-a, \-\-add-lang "[language_name][extension1]<extension2> ... 
 Add new extension/extensions with corresponding language_name to config file.
 .TP
-.BI "\-r, \-\-remove_lang "[language_name][extension1]<extension2> ...
+.BI "\-r, \-\-remove-lang "[language_name][extension1]<extension2> ...
 Remove extension/extensions with assigned language_name from config file.
 .TP
 .B \-l, \-\-list
@@ -31,5 +31,28 @@ Print report with lines of code for given directory with all sub-directories
 .TP
 .B \-h, \-\-help
 Display this man page
+.TP
+.BI "\-\-add-ignored "[localization/file]<localization/file> ... 
+Add extra ignored files / directories to 
+.B code_lines_counter
+
+(Take into consideration that
+.B code_lines_counter
+automatically exclude all files / localizations from .gitignore files inside searched directory !)
+.TP
+.BI "\-\-remove-ignored "[localization/file]<localization/file> ... 
+Remove extra ignored files / directories 
+.B code_lines_counter 
+
+(Take into consideration that
+.B code_lines_counter
+automatically exclude all files / localizations from .gitignore files inside searched directory !)
+.TP
+.B "\-\-show-ignored  
+Show all extra ignored files / directories 
+
+(Take into consideration that
+.B code_lines_counter
+automatically exclude all files / localizations from .gitignore files inside searched directory !)
 .SH COPYRIGHT
 MIT LICENCE, Łukasz Gajerski (https://github.com/Ukasz09)
