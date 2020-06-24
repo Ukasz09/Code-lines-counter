@@ -4,8 +4,8 @@
 # MIT LICENCE
 
 HOME=$(eval echo ~${SUDO_USER}) # for proper work with sudo
-EXTENSIONS_FILE_PATH=${HOME}"/code_lines_counter/extensions.txt"
-EXTRA_GITIGNORE=${HOME}"/code_lines_counter/.gitignore"
+EXTENSIONS_PATH=${HOME}"/code_lines_counter/extensions.txt"
+IGNORE_PATH=${HOME}"/code_lines_counter/.gitignore"
 EXTENSIONS_DELIMITER="|"
 TOTAL_LINES_QTY=0
 
@@ -23,24 +23,22 @@ flag_processing(){
                         show_help
                     ;;
                     dir)
-                        local DIR_PATH="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                        local DIR_PATH="${!OPTIND}"; OPTIND=$(( ++OPTIND ))
                         count_in_specific_dir ${DIR_PATH}
                     ;;
                     add-lang)
-                        local NAME="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-                        EXT=""
-                        until [[ ${!OPTIND} =~ ^-.* ]] || [ -z ${!OPTIND} ]; do
+                        local NAME="${!OPTIND}"; OPTIND=$(( ++OPTIND ))
+                        while $(is_param_for_flag ${!OPTIND}); do
                             EXT="${EXT} ${!OPTIND}"
-                            OPTIND=$(( $OPTIND + 1 ))
+                            OPTIND=$(( ++OPTIND ))
                         done
                         add_lang ${NAME} ${EXT}
                     ;;
                     remove-lang)
-                        local NAME="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-                        EXT=""
-                        until [[ ${!OPTIND} =~ ^-.* ]] || [ -z ${!OPTIND} ]; do
+                        local NAME="${!OPTIND}"; OPTIND=$(( ++OPTIND ))
+                        while $(is_param_for_flag ${!OPTIND}); do
                             EXT="${EXT} ${!OPTIND}"
-                            OPTIND=$(( $OPTIND + 1 ))
+                            OPTIND=$(( ++OPTIND ))
                         done
                         remove_lang ${NAME} ${EXT}
                     ;;
@@ -48,59 +46,46 @@ flag_processing(){
                         show_lang_list
                     ;;
                     show-ignored)
-                        echo
-                        echo "==================================="
-                        echo " IGNORED EXTRA FILES / DIRECTORIES "
-                        echo "==================================="
-                        cat ${EXTRA_GITIGNORE}
-                        echo "==================================="
-                        echo
+                        show_ignored
                     ;;
                     remove-ignored)
-                        ARGS=""
-                        until [[ ${!OPTIND} =~ ^-.* ]] || [ -z ${!OPTIND} ]; do
+                        while $(is_param_for_flag ${!OPTIND}); do
                             ARGS="${ARGS} ${!OPTIND}"
-                            OPTIND=$(( $OPTIND + 1 ))
+                            OPTIND=$(( ++OPTIND ))
                         done
                         remove_ignored ${ARGS}
                     ;;
                     add-ignored)
-                        ARGS=""
-                        until [[ ${!OPTIND} =~ ^-.* ]] || [ -z ${!OPTIND} ]; do
+                        while $(is_param_for_flag ${!OPTIND}); do
                             ARGS="${ARGS} ${!OPTIND}"
-                            OPTIND=$(( $OPTIND + 1 ))
+                            OPTIND=$(( ++OPTIND ))
                         done
                         add_ignored ${ARGS}
                     ;;
                     *)
-                        if [ "$OPTERR" != 1 ] || [ "${OPTSPEC:0:1}" = ":" ]; then
-                            incorrect_flag_msg '--'${OPTARG}
-                        fi
-                        exit 1
+                        check_flag_correctness
                     ;;
             esac;;
             h)
                 show_help
             ;;
             d)
-                local DIR_PATH="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                local DIR_PATH="${!OPTIND}"; OPTIND=$(( ++OPTIND ))
                 count_in_specific_dir ${DIR_PATH}
             ;;
             a)
-                local NAME="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-                EXT=""
-                until [[ ${!OPTIND} =~ ^-.* ]] || [ -z ${!OPTIND} ]; do
+                local NAME="${!OPTIND}"; OPTIND=$(( ++OPTIND ))
+                while $(is_param_for_flag ${!OPTIND}); do
                     EXT="${EXT} ${!OPTIND}"
-                    OPTIND=$(( $OPTIND + 1 ))
+                    OPTIND=$(( ++OPTIND ))
                 done
                 add_lang ${NAME} ${EXT}
             ;;
             r)
-                local NAME="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-                EXT=""
-                until [[ ${!OPTIND} =~ ^-.* ]] || [ -z ${!OPTIND} ]; do
+                local NAME="${!OPTIND}"; OPTIND=$(( ++OPTIND ))
+                while $(is_param_for_flag ${!OPTIND}); do
                     EXT="${EXT} ${!OPTIND}"
-                    OPTIND=$(( $OPTIND + 1 ))
+                    OPTIND=$(( ++OPTIND ))
                 done
                 remove_lang ${NAME} ${EXT}
             ;;
@@ -108,9 +93,7 @@ flag_processing(){
                 show_lang_list
             ;;
             *)
-                if [ "$OPTERR" != 1 ] || [ "${OPTSPEC:0:1}" = ":" ]; then
-                    incorrect_flag_msg '-'${OPTARG}
-                fi
+                check_flag_correctness
             ;;
         esac
     done
@@ -119,6 +102,14 @@ flag_processing(){
     if [ $OPTIND -eq 1 ]; then
         run_code_lines_report
     fi
+}
+
+is_param_for_flag(){
+    PARAM=${1}
+    if [[ ${PARAM} =~ ^-.* ]] || [ -z ${PARAM} ]; then
+        echo false
+    fi
+    echo true
 }
 
 show_lang_list(){
@@ -132,7 +123,7 @@ show_lang_list(){
     printf "   AVAILABLE LANGUAGES AND EXTENSIONS"
     printf "\n %${width}.${width}s \n" "${divider}"
     local IFS=$'\n'
-    for i in $(cat ${EXTENSIONS_FILE_PATH} | sort); do
+    for i in $(cat ${EXTENSIONS_PATH} | sort); do
         local LANG=$(echo $i | cut -d "|" -f1)
         local EXT=$(echo $i | cut -d "|" -f 2-)
         printf ${format} ${LANG} ${EXT}
@@ -144,6 +135,16 @@ show_lang_list(){
 
 show_help(){
     man code_lines_counter
+}
+
+show_ignored(){
+    echo
+    echo "==================================="
+    echo " IGNORED EXTRA FILES / DIRECTORIES "
+    echo "==================================="
+    cat ${IGNORE_PATH}
+    echo "==================================="
+    echo
 }
 
 add_lang(){
@@ -160,13 +161,13 @@ add_lang(){
             else
                 # If not found any available extensions for language
                 if [ -z "${EXTENSIONS_DICT[${NAME}]}" ]; then
-                    echo "${NAME}${EXTENSIONS_DELIMITER}${EXTENSION}" >> ${EXTENSIONS_FILE_PATH}
+                    echo "${NAME}${EXTENSIONS_DELIMITER}${EXTENSION}" >> ${EXTENSIONS_PATH}
                     EXTENSIONS_DICT[${NAME}]=${EXTENSION}
                 else
-                    > ${EXTENSIONS_FILE_PATH}
+                    > ${EXTENSIONS_PATH}
                     write_ext_with_ommiting_given_lang ${NAME}
                     local NEW_EXT="${EXTENSIONS_DICT[$NAME]} ${EXTENSION}"
-                    echo "${NAME}${EXTENSIONS_DELIMITER}${NEW_EXT}" >> ${EXTENSIONS_FILE_PATH}
+                    echo "${NAME}${EXTENSIONS_DELIMITER}${NEW_EXT}" >> ${EXTENSIONS_PATH}
                     EXTENSIONS_DICT[${NAME}]=${NEW_EXT}
                 fi
                 echo "Added: " ${NAME} "|" ${EXTENSION}
@@ -198,10 +199,10 @@ remove_lang(){
                         fi
                     fi
                 done
-                > ${EXTENSIONS_FILE_PATH}
+                > ${EXTENSIONS_PATH}
                 write_ext_with_ommiting_given_lang ${NAME}
                 if [ ! -z "${EXTENSIONS_AFTER_REMOVE}" ]; then
-                    echo "${NAME}${EXTENSIONS_DELIMITER}${EXTENSIONS_AFTER_REMOVE}" >> ${EXTENSIONS_FILE_PATH}
+                    echo "${NAME}${EXTENSIONS_DELIMITER}${EXTENSIONS_AFTER_REMOVE}" >> ${EXTENSIONS_PATH}
                     EXTENSIONS_DICT[${NAME}]=${EXTENSIONS_AFTER_REMOVE}
                 fi
                 echo "Correct removed: ${NAME}${EXTENSIONS_DELIMITER}${EXTENSION}"
@@ -219,22 +220,22 @@ remove_lang(){
 
 remove_ignored(){
     local arr=()
-    for i in $(cat ${EXTRA_GITIGNORE}); do
+    for i in $(cat ${IGNORE_PATH}); do
         if [[ ! "$@" =~ "${i}" ]]; then
             arr+=(${i})
         else
             echo "Removed: ${i}"
         fi
     done
-    > ${EXTRA_GITIGNORE}
+    > ${IGNORE_PATH}
     for i in "${arr[@]}"; do
-        echo ${i} >> ${EXTRA_GITIGNORE}
+        echo ${i} >> ${IGNORE_PATH}
     done
 }
 
 add_ignored(){
     for i in "$@"; do
-        echo ${i} >> ${EXTRA_GITIGNORE}
+        echo ${i} >> ${IGNORE_PATH}
         echo "Added: ${i}"
     done
 }
@@ -244,7 +245,7 @@ write_ext_with_ommiting_given_lang(){
     for key in ${!EXTENSIONS_DICT[@]}; do
         if [ "${key}" != "${GIVEN_LANG}" ] ; then
             local VALUES=${EXTENSIONS_DICT[${key}]}
-            echo "${key}${EXTENSIONS_DELIMITER}${VALUES}" >> ${EXTENSIONS_FILE_PATH}
+            echo "${key}${EXTENSIONS_DELIMITER}${VALUES}" >> ${EXTENSIONS_PATH}
         fi
     done
 }
@@ -272,9 +273,10 @@ get_lang_of_extension(){
     echo ""
 }
 
-incorrect_flag_msg(){
-    local FLAG=${1}
-    echo "Unknown option ${FLAG}" >&2
+check_flag_correctness(){
+    if [ "$OPTERR" != 1 ] || [ "${OPTSPEC:0:1}" = ":" ]; then
+        "Unknown option -${OPTARG}" >&2
+    fi
 }
 
 # logic ----------------------------------------------------------------------------- #
@@ -289,8 +291,8 @@ read_available_extensions(){
         local name=$(echo $line | cut -d "|" -f1 | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
         local ext=$(echo $line | cut -d "|" -f 2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
         EXTENSIONS_DICT[$name]="$ext"
-    done < ${EXTENSIONS_FILE_PATH}
-    sort -o ${EXTENSIONS_FILE_PATH} ${EXTENSIONS_FILE_PATH}
+    done < ${EXTENSIONS_PATH}
+    sort -o ${EXTENSIONS_PATH} ${EXTENSIONS_PATH}
 }
 
 run_code_lines_report(){
@@ -304,7 +306,7 @@ run_code_lines_report(){
 
 # convert all jupter files to scripts
 jupyter_to_scripts(){
-    fdfind --ignore-file ${EXTRA_GITIGNORE} -e "ipynb" -x jupyter nbconvert --to script --log-level=0 --output-dir=./code_counter_tmp/{//} {}
+    fdfind --ignore-file ${IGNORE_PATH} -e "ipynb" -x jupyter nbconvert --to script --log-level=0 --output-dir=./code_counter_tmp/{//} {}
 }
 
 calc_results(){
@@ -321,7 +323,7 @@ calc_results(){
 }
 
 count_lines(){
-    fdfind --ignore-file ${EXTRA_GITIGNORE} -e ${1} -x wc -l | awk '{total += $1} END {print total}'
+    fdfind --ignore-file ${IGNORE_PATH} -e ${1} -x wc -l | awk '{total += $1} END {print total}'
 }
 
 calc_total_lines_qty(){
