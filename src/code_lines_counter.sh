@@ -3,7 +3,7 @@
 # Copyright Łukasz Gajerski (https://github.com/Ukasz09)
 # MIT LICENCE
 
-HOME=$(eval echo ~${SUDO_USER}) # for proper work with sudo
+HOME=$(eval echo "~${SUDO_USER}") # for proper work with sudo
 EXTENSIONS_PATH=${HOME}"/code_lines_counter/extensions.txt"
 IGNORE_PATH=${HOME}"/code_lines_counter/.gitignore"
 EXTENSIONS_DELIMITER="|"
@@ -24,7 +24,7 @@ flag_processing(){
                     ;;
                     dir)
                         local DIR_PATH="${!OPTIND}"; OPTIND=$(( ++OPTIND ))
-                        count_in_specific_dir ${DIR_PATH}
+                        count_in_specific_dir "${DIR_PATH}"
                     ;;
                     add-lang)
                         local NAME="${!OPTIND}"; OPTIND=$(( ++OPTIND ))
@@ -32,7 +32,7 @@ flag_processing(){
                             EXT="${EXT} ${!OPTIND}"
                             OPTIND=$(( ++OPTIND ))
                         done
-                        add_lang ${NAME} ${EXT}
+                        add_lang "${NAME}" "${EXT}"
                     ;;
                     remove-lang)
                         local NAME="${!OPTIND}"; OPTIND=$(( ++OPTIND ))
@@ -40,7 +40,7 @@ flag_processing(){
                             EXT="${EXT} ${!OPTIND}"
                             OPTIND=$(( ++OPTIND ))
                         done
-                        remove_lang ${NAME} ${EXT}
+                        remove_lang "${NAME}" "${EXT}"
                     ;;
                     list)
                         show_lang_list
@@ -53,14 +53,14 @@ flag_processing(){
                             ARGS="${ARGS} ${!OPTIND}"
                             OPTIND=$(( ++OPTIND ))
                         done
-                        remove_ignored ${ARGS}
+                        remove_ignored "${ARGS}"
                     ;;
                     add-ignored)
                         while $(is_param_for_flag ${!OPTIND}); do
                             ARGS="${ARGS} ${!OPTIND}"
                             OPTIND=$(( ++OPTIND ))
                         done
-                        add_ignored ${ARGS}
+                        add_ignored "${ARGS}"
                     ;;
                     *)
                         check_flag_correctness
@@ -71,7 +71,7 @@ flag_processing(){
             ;;
             d)
                 local DIR_PATH="${!OPTIND}"; OPTIND=$(( ++OPTIND ))
-                count_in_specific_dir ${DIR_PATH}
+                count_in_specific_dir "${DIR_PATH}"
             ;;
             a)
                 local NAME="${!OPTIND}"; OPTIND=$(( ++OPTIND ))
@@ -79,7 +79,7 @@ flag_processing(){
                     EXT="${EXT} ${!OPTIND}"
                     OPTIND=$(( ++OPTIND ))
                 done
-                add_lang ${NAME} ${EXT}
+                add_lang "${NAME}" "${EXT}"
             ;;
             r)
                 local NAME="${!OPTIND}"; OPTIND=$(( ++OPTIND ))
@@ -87,7 +87,7 @@ flag_processing(){
                     EXT="${EXT} ${!OPTIND}"
                     OPTIND=$(( ++OPTIND ))
                 done
-                remove_lang ${NAME} ${EXT}
+                remove_lang "${NAME}" "${EXT}"
             ;;
             l)
                 show_lang_list
@@ -99,14 +99,14 @@ flag_processing(){
     done
     
     # if no flag given
-    if [ $OPTIND -eq 1 ]; then
+    if [ ${OPTIND} -eq 1 ]; then
         run_code_lines_report
     fi
 }
 
 is_param_for_flag(){
     PARAM=${1}
-    if [[ ${PARAM} =~ ^-.* ]] || [ -z ${PARAM} ]; then
+    if [[ ${PARAM} =~ ^-.* ]] || [ -z "${PARAM}" ]; then
         echo false
     fi
     echo true
@@ -122,12 +122,12 @@ show_lang_list(){
     printf " %${width}.${width}s \n" "${divider}"
     printf "   AVAILABLE LANGUAGES AND EXTENSIONS"
     printf "\n %${width}.${width}s \n" "${divider}"
-    local IFS=$'\n'
-    for i in $(cat ${EXTENSIONS_PATH} | sort); do
-        local LANG=$(echo $i | cut -d "|" -f1)
-        local EXT=$(echo $i | cut -d "|" -f 2-)
+    while read line; do
+        local IFS=$'\n'
+        local LANG=$(echo $line | cut -d "|" -f1)
+        local EXT=$(echo $line | cut -d "|" -f 2-)
         printf ${format} ${LANG} ${EXT}
-    done
+    done < ${EXTENSIONS_PATH} | sort
     printf " %${width}.${width}s" "${divider}"
     echo
     
@@ -220,13 +220,13 @@ remove_lang(){
 
 remove_ignored(){
     local arr=()
-    for i in $(cat ${IGNORE_PATH}); do
-        if [[ ! "$@" =~ "${i}" ]]; then
-            arr+=(${i})
+    while read line; do
+        if [[ ! "$@" =~ "${line}" ]]; then
+            arr+=(${line})
         else
-            echo "Removed: ${i}"
+            echo "Removed: ${line}"
         fi
-    done
+    done < ${IGNORE_PATH}
     > ${IGNORE_PATH}
     for i in "${arr[@]}"; do
         echo ${i} >> ${IGNORE_PATH}
