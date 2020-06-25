@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# Copyright Łukasz Gajerski (https://github.com/Ukasz09)
-# MIT LICENCE
+# MIT Licence | Łukasz Gajerski (https://github.com/Ukasz09)
 
 HOME=$(eval echo "~${SUDO_USER}") # for proper work with sudo
 EXTENSIONS_PATH=${HOME}"/code_lines_counter/extensions.txt"
@@ -224,7 +223,7 @@ remove_ignored(){
         if [[ ! $@ =~ "${line}" ]]; then
             arr+=("${line}")
         else
-            echo "Removed: ${line}"
+            echo "Removed ignored: ${line}"
         fi
     done < "${IGNORE_PATH}"
     > "${IGNORE_PATH}"
@@ -236,7 +235,7 @@ remove_ignored(){
 add_ignored(){
     for i in $@; do
         echo "${i}" >> "${IGNORE_PATH}"
-        echo "Added: ${i}"
+        echo "Added ignored: ${i}"
     done
 }
 
@@ -287,6 +286,7 @@ count_in_specific_dir(){
 }
 
 read_available_extensions(){
+    clear_extensions
     while read -r line; do
         local name=$(echo "$line" | cut -d "|" -f1 | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
         local ext=$(echo "$line" | cut -d "|" -f 2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
@@ -296,12 +296,25 @@ read_available_extensions(){
 }
 
 run_code_lines_report(){
+    clear_results
     read_available_extensions
     jupyter_to_scripts
     calc_results
     calc_total_lines_qty
     print_results
     clear_jupyter_tmp_files
+}
+
+clear_results(){
+    for key in "${!RESULTS[@]}"; do
+        RESULTS[${key}]=""
+    done
+}
+
+clear_extensions(){
+    for key in "${!EXTENSIONS_DICT[@]}"; do
+        unset RESULTS[${key}]
+    done
 }
 
 # convert all jupter files to scripts
@@ -316,9 +329,7 @@ calc_results(){
             lines_no=$(count_lines "${ext}")
             ((qty+=lines_no))
         done
-        if [ ! "${qty}" -eq "0" ]; then
-            RESULTS[${key}]=${qty}
-        fi
+        RESULTS[${key}]=${qty}
     done
 }
 
@@ -345,7 +356,9 @@ print_results(){
     printf "${header}" "LANGUAGE" "LINES_QTY"
     printf " %${width}.${width}s\n" "${divider}"
     for key in "${!RESULTS[@]}"; do
-        printf "${format}" ${key} ${RESULTS[${key}]}
+        if [ ! "${RESULTS[${key}]}" -eq "0" ]; then
+            printf "${format}" ${key} ${RESULTS[${key}]}
+        fi
     done | sort -r -t : -n -k 2
     printf " %${width}.${width}s\n" "${divider}"
     printf "${format}" "TOTAL" ${TOTAL_LINES_QTY}
