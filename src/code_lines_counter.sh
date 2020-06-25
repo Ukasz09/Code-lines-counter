@@ -7,6 +7,9 @@ EXTENSIONS_PATH=${HOME}"/code_lines_counter/extensions.txt"
 IGNORE_PATH=${HOME}"/code_lines_counter/.gitignore"
 EXTENSIONS_DELIMITER="|"
 TOTAL_LINES_QTY=0
+EMPTY_LINE_SED='/^\s*$/d'
+LEADING_SPACES_SEED='s/^[[:space:]]*//'
+TRAILING_SPACES_SEED='s/[[:space:]]*$//'
 
 declare -A EXTENSIONS_DICT
 declare -A RESULTS
@@ -288,14 +291,17 @@ count_in_specific_dir(){
 read_available_extensions(){
     clear_extensions
     while read -r line; do
-        local name=$(echo "$line" | cut -d "|" -f1 | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-        local ext=$(echo "$line" | cut -d "|" -f 2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+        local name=$(echo "$line" | cut -d "|" -f1 | sed -e "${LEADING_SPACES_SEED}" -e "${TRAILING_SPACES_SEED}")
+        local ext=$(echo "$line" | cut -d "|" -f 2- | sed -e "${LEADING_SPACES_SEED}" -e "${TRAILING_SPACES_SEED}")
         EXTENSIONS_DICT[$name]="$ext"
     done < "${EXTENSIONS_PATH}"
     sort -o "${EXTENSIONS_PATH}" "${EXTENSIONS_PATH}"
 }
 
 run_code_lines_report(){
+    echo
+    echo "Generating lines report. Please wait ..."
+    echo
     clear_results
     read_available_extensions
     jupyter_to_scripts
@@ -334,7 +340,7 @@ calc_results(){
 }
 
 count_lines(){
-    fdfind --ignore-file "${IGNORE_PATH}" -e "${1}" -x wc -l | awk '{total += $1} END {print total}'
+    fdfind --ignore-file "${IGNORE_PATH}" -e "${1}" -x sed ${EMPTY_LINE_SED} | wc -l | awk '{total += $1} END {print total}'
 }
 
 calc_total_lines_qty(){
@@ -345,26 +351,36 @@ calc_total_lines_qty(){
 }
 
 print_results(){
-    divider="===================="
+    divider="========================="
     divider=${divider}${divider}
-    header="\n | %-13s | %10s | \n"
-    format=" | %-13s : %10i | \n"
-    width=30
+    header="\n | %-13s | %10s | %10s | \n"
+    format=" | %-13s : %10i : %10s | \n"
+    summary_format=" | %-13s : %10i | \n"
+    width=43
     
     echo
     printf " %${width}.${width}s" "${divider}"
-    printf "${header}" "LANGUAGE" "LINES_QTY"
+    printf "${header}" "LANGUAGE" "LINES" "PERCENTAGE"
     printf " %${width}.${width}s\n" "${divider}"
     for key in "${!RESULTS[@]}"; do
         if [ ! "${RESULTS[${key}]}" -eq "0" ]; then
-            printf "${format}" ${key} ${RESULTS[${key}]}
+            local QTY=${RESULTS[${key}]}
+            local PERCENT=$(calc_percentage "${QTY}" "${TOTAL_LINES_QTY}")
+            printf "${format}" "${key}" "${QTY}" "${PERCENT} %"
         fi
     done | sort -r -t : -n -k 2
     printf " %${width}.${width}s\n" "${divider}"
-    printf "${format}" "TOTAL" ${TOTAL_LINES_QTY}
-    printf " %${width}.${width}s" "${divider}"
+    printf "${summary_format}" "TOTAL" ${TOTAL_LINES_QTY}
+    printf " %30.30s" "${divider}"
     echo
     echo
+}
+
+calc_percentage(){
+    local ACTUAL=${1}
+    local TOTAL=${2}
+    local PERCENT=$(echo "${ACTUAL} / ${TOTAL} * 100" | bc -l | xargs printf "%.2f")
+    echo "${PERCENT}"
 }
 
 clear_jupyter_tmp_files(){
