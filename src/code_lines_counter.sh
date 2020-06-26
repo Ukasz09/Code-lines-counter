@@ -81,6 +81,10 @@ flag_processing(){
                         SIGN="${!OPTIND}"; OPTIND=$(( ++OPTIND ))
                         add_single_comment "${LANG}" "${SIGN}"
                     ;;
+                    remove-single-comment)
+                        LANG="${!OPTIND}"; OPTIND=$(( ++OPTIND ))
+                        remove_single_comment "${LANG}"
+                    ;;
                     *)
                         check_flag_correctness
                     ;;
@@ -267,6 +271,21 @@ remove_lang(){
             echo "Param cannot be empty !"
         fi
     done
+}
+
+remove_single_comment(){
+    read_single_comments
+    local NAME=${1}
+    if [ -n "${NAME}" ]; then
+        if [ -n "${SINGLE_COMMENTS_DICT[${NAME}]}" ]; then
+            > "${SINGLE_COMMENTS_PATH}"
+            write_single_comment_with_ommiting_given_lang "${NAME}"
+            echo "Correct removed single comment for language: ${NAME}"
+        else
+            echo "Config file doesn't contain single comments sign for language <${NAME}> !"
+        fi
+    else echo "Language name cannot be empty !"
+    fi
 }
 
 remove_ignored(){
