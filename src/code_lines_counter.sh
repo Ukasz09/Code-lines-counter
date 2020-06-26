@@ -9,9 +9,11 @@ BLOCK_COMMENT_END='\*\/'
 # MIT Licence | Łukasz Gajerski (https://github.com/Ukasz09)
 
 HOME=$(eval echo "~${SUDO_USER}") # for proper work with sudo
-EXTENSIONS_PATH=${HOME}"/code_lines_counter/extensions.txt"
+EXTENSIONS_PATH="${HOME}/code_lines_counter/extensions.txt"
+SINGLE_COMMENTS_PATH="${HOME}/code_lines_counter/single_comments.txt"
+MULTIPLE_COMMENTS_PATH="${HOME}/code_lines_counter/multiple_comments.txt"
 IGNORE_PATH=${HOME}"/code_lines_counter/.gitignore"
-EXTENSIONS_DELIMITER="|"
+DELIMITER="|"
 TOTAL_LINES_QTY=0
 TOTAL_COMMENTS_QTY=0
 EMPTY_LINE_SED='/^\s*$/d'
@@ -19,8 +21,10 @@ LEADING_SPACES_SEED='s/^[[:space:]]*//'
 TRAILING_SPACES_SEED='s/[[:space:]]*$//'
 
 declare -A EXTENSIONS_DICT
+declare -A SINGLE_COMMENTS_DICT
+declare -A BLOCK_COMMENTS_DICT
 declare -A RESULTS
-declare -A COMMENTS_RESULTS
+declare -A COMMENT_RESULTS
 
 # controller ------------------------------------------------------------------------- #
 flag_processing(){
@@ -71,6 +75,11 @@ flag_processing(){
                             OPTIND=$(( ++OPTIND ))
                         done
                         add_ignored "${ARGS}"
+                    ;;
+                    add-single-comment)
+                        LANG="${!OPTIND}"; OPTIND=$(( ++OPTIND ))
+                        SIGN="${!OPTIND}"; OPTIND=$(( ++OPTIND ))
+                        add_single_comment "${LANG}" "${SIGN}"
                     ;;
                     *)
                         check_flag_correctness
@@ -162,8 +171,8 @@ add_lang(){
     local NAME=${1}
     shift
     for EXTENSION in $@; do
-        local IS_CORRECT=$(params_are_correct "${NAME}" "${EXTENSION}")
-        if ${IS_CORRECT}; then
+        local IS_NOT_EMPTY=$(params_not_empty "${NAME}" "${EXTENSION}")
+        if ${IS_NOT_EMPTY}; then
             # If exstension already exist
             local FOUND_LANG=$(get_lang_of_extension "${EXTENSION}")
             if [ -n "${FOUND_LANG}" ]; then
@@ -171,13 +180,13 @@ add_lang(){
             else
                 # If not found any available extensions for language
                 if [ -z "${EXTENSIONS_DICT[${NAME}]}" ]; then
-                    echo "${NAME}${EXTENSIONS_DELIMITER}${EXTENSION}" >> "${EXTENSIONS_PATH}"
+                    echo "${NAME}${DELIMITER}${EXTENSION}" >> "${EXTENSIONS_PATH}"
                     EXTENSIONS_DICT[${NAME}]=${EXTENSION}
                 else
                     > "${EXTENSIONS_PATH}"
                     write_ext_with_ommiting_given_lang "${NAME}"
                     local NEW_EXT="${EXTENSIONS_DICT[$NAME]} ${EXTENSION}"
-                    echo "${NAME}${EXTENSIONS_DELIMITER}${NEW_EXT}" >> "${EXTENSIONS_PATH}"
+                    echo "${NAME}${DELIMITER}${NEW_EXT}" >> "${EXTENSIONS_PATH}"
                     EXTENSIONS_DICT[${NAME}]=${NEW_EXT}
                 fi
                 echo "Added: ${NAME} | ${EXTENSION}"
@@ -188,13 +197,45 @@ add_lang(){
     done;
 }
 
+add_single_comment(){
+    read_single_comments
+    local NAME=${1}
+    local COMMENT=${2}
+    local IS_NOT_EMPTY=$(params_not_empty "${NAME}" "${COMMENT}")
+    if ${IS_NOT_EMPTY}; then
+        # If language don't have associated single comment
+        if [ -z "${SINGLE_COMMENTS_DICT[${NAME}]}" ]; then
+            echo "${NAME}${DELIMITER}${COMMENT}" >> "${SINGLE_COMMENTS_PATH}"
+            SINGLE_COMMENTS_DICT[${NAME}]=${COMMENT}
+        else
+            > "${SINGLE_COMMENTS_PATH}"
+            write_single_comment_with_ommiting_given_lang "${NAME}"
+            echo "${NAME}${DELIMITER}${COMMENT}" >> "${SINGLE_COMMENTS_PATH}"
+            SINGLE_COMMENTS_DICT[${NAME}]=${COMMENT}
+        fi
+        echo "Added: ${NAME} | ${COMMENT}"
+        
+    else
+        echo "Parameters cannot be empty !"
+    fi
+}
+
+read_single_comments(){
+    clear_single_comments
+    while read -r line; do
+        local lang=$(echo "$line" | cut -d "|" -f1 | sed -e "${LEADING_SPACES_SEED}" -e "${TRAILING_SPACES_SEED}")
+        local comment=$(echo "$line" | cut -d "|" -f2 | sed -e "${LEADING_SPACES_SEED}" -e "${TRAILING_SPACES_SEED}")
+        SINGLE_COMMENTS_DICT[$lang]="$comment"
+    done < "${SINGLE_COMMENTS_PATH}"
+}
+
 remove_lang(){
     read_available_extensions
     local NAME=${1}
     shift
     for EXTENSION in $@; do
-        local IS_CORRECT=$(params_are_correct "${NAME}" "${EXTENSION}")
-        if ${IS_CORRECT}; then
+        local IS_NOT_EMPTY=$(params_not_empty "${NAME}" "${EXTENSION}")
+        if ${IS_NOT_EMPTY}; then
             local FOUND_LANG=$(get_lang_of_extension "${EXTENSION}")
             # If given language not exist
             if [ "${FOUND_LANG}" == "${NAME}" ]; then
@@ -212,10 +253,10 @@ remove_lang(){
                 > "${EXTENSIONS_PATH}"
                 write_ext_with_ommiting_given_lang "${NAME}"
                 if [ -n "${EXTENSIONS_AFTER_REMOVE}" ]; then
-                    echo "${NAME}${EXTENSIONS_DELIMITER}${EXTENSIONS_AFTER_REMOVE}" >> "${EXTENSIONS_PATH}"
+                    echo "${NAME}${DELIMITER}${EXTENSIONS_AFTER_REMOVE}" >> "${EXTENSIONS_PATH}"
                     EXTENSIONS_DICT[${NAME}]=${EXTENSIONS_AFTER_REMOVE}
                 fi
-                echo "Correct removed: ${NAME}${EXTENSIONS_DELIMITER}${EXTENSION}"
+                echo "Correct removed: ${NAME}${DELIMITER}${EXTENSION}"
             else
                 echo "Config file doesn't contain <${NAME}|${EXTENSION}> element !"
                 if [ -n "${FOUND_LANG}" ]; then
@@ -255,12 +296,22 @@ write_ext_with_ommiting_given_lang(){
     for key in "${!EXTENSIONS_DICT[@]}"; do
         if [ "${key}" != "${GIVEN_LANG}" ] ; then
             local VALUES=${EXTENSIONS_DICT[${key}]}
-            echo "${key}${EXTENSIONS_DELIMITER}${VALUES}" >> "${EXTENSIONS_PATH}"
+            echo "${key}${DELIMITER}${VALUES}" >> "${EXTENSIONS_PATH}"
         fi
     done
 }
 
-params_are_correct(){
+write_single_comment_with_ommiting_given_lang(){
+    local GIVEN_LANG=${1}
+    for key in "${!SINGLE_COMMENTS_DICT[@]}"; do
+        if [ "${key}" != "${GIVEN_LANG}" ] ; then
+            local VALUE=${SINGLE_COMMENTS_DICT[${key}]}
+            echo "${key}${DELIMITER}${VALUE}" >> "${SINGLE_COMMENTS_PATH}"
+        fi
+    done
+}
+
+params_not_empty(){
     local NAME="${1}"
     local EXTENSION="${2}"
     if [ -z "${NAME}" ] || [ -z "${EXTENSION}" ]; then
@@ -329,6 +380,12 @@ clear_results(){
 clear_extensions(){
     for key in "${!EXTENSIONS_DICT[@]}"; do
         unset RESULTS[${key}]
+    done
+}
+
+clear_single_comments(){
+    for key in "${!SINGLE_COMMENTS_DICT[@]}"; do
+        unset SINGLE_COMMENT_RESULTS[${key}]
     done
 }
 
