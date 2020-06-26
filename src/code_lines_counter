@@ -4,7 +4,7 @@ _code_lines_counter()
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
-    opts="--add-lang --help --remove-lang --list --dir --help --add-ignored --remove-ignored --show-ignored"
+    opts=" --add-single-comment --remove-single-comment --add-multiple-comment --remove-multiple-comment --show-comments-list --add-lang --help --remove-lang --list --dir --help --add-ignored --remove-ignored --show-ignored"
 
     if [[ ${cur} == -* ]] ; then
         COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )

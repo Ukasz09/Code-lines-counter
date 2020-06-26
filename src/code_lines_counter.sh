@@ -91,6 +91,13 @@ flag_processing(){
                         END_SIGN="${!OPTIND}"; OPTIND=$(( ++OPTIND ))
                         add_multiple_comment ${LANG} ${START_SIGN} ${END_SIGN}
                     ;;
+                    remove-multiple-comment)
+                        LANG="${!OPTIND}"; OPTIND=$(( ++OPTIND ))
+                        remove_multiple_comment ${LANG}
+                    ;;
+                    show-comments-list)
+                        show_comments_list
+                    ;;
                     *)
                         check_flag_correctness
                     ;;
@@ -157,6 +164,35 @@ show_lang_list(){
         local EXT=$(echo "$line" | cut -d "|" -f 2-)
         printf "${format}" "${LANG}" "${EXT}"
     done < "${EXTENSIONS_PATH}" | sort
+    printf " %${width}.${width}s" "${divider}"
+    echo
+}
+
+show_comments_list(){
+    divider="=========================================="
+    divider=${divider}${divider}
+    format=" | %-15s : %15s : %15s | \n"
+    header="\n | %-15s | %15s | %15s | \n"
+    width=57
+    
+    echo
+    printf " %${width}.${width}s" "${divider}"
+    printf "${header}" "LANGUAGE" "SINGLE COMMENT" "MULTIPLE COMMENT"
+    printf "%${width}.${width}s \n" "${divider}"
+    read_single_comments
+    read_multiple_comments
+    for LANG in "${!SINGLE_COMMENTS_DICT[@]}"; do
+        local IFS=$'\n'
+        local SINGLE_COMMENT=${SINGLE_COMMENTS_DICT[${LANG}]}
+        local MULTIPLE_COMMENT=${MULTIPLE_COMMENTS_DICT[${LANG}]}
+        printf "${format}" "${LANG}" "${SINGLE_COMMENT}" "${MULTIPLE_COMMENT}"
+    done
+    for LANG in "${!MULTIPLE_COMMENTS_DICT[@]}"; do
+        if [ -z ${SINGLE_COMMENTS_DICT[${LANG}]} ]; then
+            local MULTIPLE_COMMENT=${MULTIPLE_COMMENTS_DICT[${LANG}]}
+            printf "${format}" "${LANG}" " " "${MULTIPLE_COMMENT}"
+        fi
+    done
     printf " %${width}.${width}s" "${divider}"
     echo
 }
@@ -269,6 +305,21 @@ read_multiple_comments(){
         local comment=$(echo "$line" | cut -d "|" -f2 | sed -e "${LEADING_SPACES_SEED}" -e "${TRAILING_SPACES_SEED}")
         MULTIPLE_COMMENTS_DICT[${lang}]="${comment}"
     done < "${MULTIPLE_COMMENTS_PATH}"
+}
+
+remove_multiple_comment(){
+    read_multiple_comments
+    local NAME=${1}
+    if [ -n "${NAME}" ]; then
+        if [ -n "${MULTIPLE_COMMENTS_DICT[${NAME}]}" ]; then
+            > "${MULTIPLE_COMMENTS_PATH}"
+            write_multiple_comment_with_ommiting_given_lang "${NAME}"
+            echo "Correct removed single comment for language: ${NAME}"
+        else
+            echo "Config file doesn't contain single comments sign for language <${NAME}> !"
+        fi
+    else echo "Language name cannot be empty !"
+    fi
 }
 
 remove_lang(){
