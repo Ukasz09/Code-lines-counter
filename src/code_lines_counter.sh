@@ -19,6 +19,7 @@ TRAILING_SPACES_SEED='s/[[:space:]]*$//'
 
 declare -A EXTENSIONS_DICT
 declare -A RESULTS
+declare -A COMMENTS_RESULTS
 
 # controller ------------------------------------------------------------------------- #
 flag_processing(){
@@ -320,6 +321,7 @@ run_code_lines_report(){
 clear_results(){
     for key in "${!RESULTS[@]}"; do
         RESULTS[${key}]=""
+        COMMENTS_RESULTS[${key}]=""
     done
 }
 
@@ -336,21 +338,28 @@ jupyter_to_scripts(){
 
 calc_results(){
     for key in "${!EXTENSIONS_DICT[@]}"; do
-        qty=0
+        code_qty=0
+        comments_qty=0
         for ext in ${EXTENSIONS_DICT[${key}]}; do
-            lines_no=$(count_lines "${ext}")
-            ((qty+=lines_no))
+            local LINES=$(count_lines "${ext}")
+            local CODE_LINES=$(echo "${LINES}" | cut -d "|" -f1)
+            local COMMENTS_LINES=$(echo "${LINES}" | cut -d "|" -f2)
+            ((code_qty+=CODE_LINES))
+            ((comments_qty+=COMMENTS_LINES))
         done
-        RESULTS[${key}]=${qty}
+        RESULTS[${key}]=${code_qty}
+        COMMENTS_RESULTS[${key}]=${comments_qty}
     done
 }
 
 count_lines(){
-    # fdfind --ignore-file "${IGNORE_PATH}" -e "${1}" -x sed ${EMPTY_LINE_SED} | wc -l | awk '{total += $1} END {print total}'
-
+    local TOTAL_QTY=$(fdfind --ignore-file "${IGNORE_PATH}" -e "${1}" -x sed ${EMPTY_LINE_SED} | wc -l | awk '{total += $1} END {print total}')
+    
     make_block_comments_sed ${BLOCK_COMMENT_START} ${BLOCK_COMMENT_END} ${SED_PATH}
-        
-    fdfind --ignore-file "${IGNORE_PATH}" -e "${1}" -x sed "/^[[:blank:]]*${ONE_LINER_COMMENT}/d;s/${ONE_LINER_COMMENT}.*//" | sed -f ${SED_PATH} | sed ${EMPTY_LINE_SED} | wc -l | awk '{total += $1} END {print total}'
+    
+    local WITHOUT_COMMENTS_QTY=$(fdfind --ignore-file "${IGNORE_PATH}" -e "${1}" -x sed "/^[[:blank:]]*${ONE_LINER_COMMENT}/d;s/${ONE_LINER_COMMENT}.*//" | sed -f ${SED_PATH} | sed ${EMPTY_LINE_SED} | wc -l | awk '{total += $1} END {print total}')
+    local COMMENTS_QTY=$((TOTAL_QTY-WITHOUT_COMMENTS_QTY))
+    echo "${WITHOUT_COMMENTS_QTY}|${COMMENTS_QTY}"
 }
 
 calc_total_lines_qty(){
@@ -361,22 +370,23 @@ calc_total_lines_qty(){
 }
 
 print_results(){
-    divider="================================"
+    divider="====================================================================================================================="
     divider=${divider}${divider}
-    header="\n | %-13s | %10s | %15s | \n"
-    format=" | %-13s : %10i : %19s | \n"
+    header="\n | %-13s | %10s | %13s | %15s | \n"
+    format=" | %-13s : %10i : %13s : %19s | \n"
     summary_format=" | %-13s : %10i | \n"
-    width=52
+    width=73
     
     echo
     printf " %${width}.${width}s" "${divider}"
-    printf "${header}" "LANGUAGE" "LINES" "PERCENTAGE OF TOTAL"
+    printf "${header}" "LANGUAGE" "CODE LINES" "COMMENT LINES" "LANG PERCENTAGE OF TOTAL"
     printf " %${width}.${width}s\n" "${divider}"
     for key in "${!RESULTS[@]}"; do
         if [ ! "${RESULTS[${key}]}" -eq "0" ]; then
-            local QTY=${RESULTS[${key}]}
-            local PERCENT=$(calc_percentage "${QTY}" "${TOTAL_LINES_QTY}")
-            printf "${format}" "${key}" "${QTY}" "${PERCENT} %"
+            local CODE_QTY=${RESULTS[${key}]}
+            local PERCENT=$(calc_percentage "${CODE_QTY}" "${TOTAL_LINES_QTY}")
+            local COMMENTS_QTY=${COMMENTS_RESULTS[${key}]}
+            printf "${format}" "${key}" "${CODE_QTY}" "${COMMENTS_QTY}" "${PERCENT} %"
         fi
     done | sort -r -t : -n -k 2
     printf " %${width}.${width}s\n" "${divider}"
