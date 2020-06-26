@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# tmp
+SED_PATH="/home/ukasz09/Dokumenty/Dev/GitHub/Code-lines-counter/src/test.sed"
+ONE_LINER_COMMENT='\/\/'
+BLOCK_COMMENT_START='\/\*'
+BLOCK_COMMENT_END='\*\/'
+
 # MIT Licence | Łukasz Gajerski (https://github.com/Ukasz09)
 
 HOME=$(eval echo "~${SUDO_USER}") # for proper work with sudo
@@ -340,7 +346,11 @@ calc_results(){
 }
 
 count_lines(){
-    fdfind --ignore-file "${IGNORE_PATH}" -e "${1}" -x sed ${EMPTY_LINE_SED} | wc -l | awk '{total += $1} END {print total}'
+    # fdfind --ignore-file "${IGNORE_PATH}" -e "${1}" -x sed ${EMPTY_LINE_SED} | wc -l | awk '{total += $1} END {print total}'
+
+    make_block_comments_sed ${BLOCK_COMMENT_START} ${BLOCK_COMMENT_END} ${SED_PATH}
+        
+    fdfind --ignore-file "${IGNORE_PATH}" -e "${1}" -x sed "/^[[:blank:]]*${ONE_LINER_COMMENT}/d;s/${ONE_LINER_COMMENT}.*//" | sed -f ${SED_PATH} | sed ${EMPTY_LINE_SED} | wc -l | awk '{total += $1} END {print total}'
 }
 
 calc_total_lines_qty(){
@@ -351,16 +361,16 @@ calc_total_lines_qty(){
 }
 
 print_results(){
-    divider="========================="
+    divider="================================"
     divider=${divider}${divider}
-    header="\n | %-13s | %10s | %10s | \n"
-    format=" | %-13s : %10i : %10s | \n"
+    header="\n | %-13s | %10s | %15s | \n"
+    format=" | %-13s : %10i : %19s | \n"
     summary_format=" | %-13s : %10i | \n"
-    width=43
+    width=52
     
     echo
     printf " %${width}.${width}s" "${divider}"
-    printf "${header}" "LANGUAGE" "LINES" "PERCENTAGE"
+    printf "${header}" "LANGUAGE" "LINES" "PERCENTAGE OF TOTAL"
     printf " %${width}.${width}s\n" "${divider}"
     for key in "${!RESULTS[@]}"; do
         if [ ! "${RESULTS[${key}]}" -eq "0" ]; then
@@ -385,6 +395,19 @@ calc_percentage(){
 
 clear_jupyter_tmp_files(){
     if [ -d "./code_counter_tmp" ]; then rm -r ./code_counter_tmp; fi
+}
+############3
+make_block_comments_sed(){
+    local START=${1}
+    local END=${2}
+    local SED_PATH=${3}
+    echo "/$START/ !b" > ${SED_PATH}
+    echo ":a" >> ${SED_PATH}
+    echo "/$END/ !{" >> ${SED_PATH}
+    echo "N" >> ${SED_PATH}
+    echo "b a" >> ${SED_PATH}
+    echo "}" >> ${SED_PATH}
+    echo "s/$START.*$END//" >> ${SED_PATH}
 }
 
 # main ----------------------------------------------------------------------------- #
