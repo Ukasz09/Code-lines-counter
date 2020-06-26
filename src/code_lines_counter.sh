@@ -22,7 +22,7 @@ TRAILING_SPACES_SEED='s/[[:space:]]*$//'
 
 declare -A EXTENSIONS_DICT
 declare -A SINGLE_COMMENTS_DICT
-declare -A BLOCK_COMMENTS_DICT
+declare -A MULTIPLE_COMMENTS_DICT
 declare -A RESULTS
 declare -A COMMENT_RESULTS
 
@@ -84,6 +84,12 @@ flag_processing(){
                     remove-single-comment)
                         LANG="${!OPTIND}"; OPTIND=$(( ++OPTIND ))
                         remove_single_comment "${LANG}"
+                    ;;
+                    add-multiple-comment)
+                        LANG="${!OPTIND}"; OPTIND=$(( ++OPTIND ))
+                        START_SIGN="${!OPTIND}"; OPTIND=$(( ++OPTIND ))
+                        END_SIGN="${!OPTIND}"; OPTIND=$(( ++OPTIND ))
+                        add_multiple_comment ${LANG} ${START_SIGN} ${END_SIGN}
                     ;;
                     *)
                         check_flag_correctness
@@ -153,7 +159,6 @@ show_lang_list(){
     done < "${EXTENSIONS_PATH}" | sort
     printf " %${width}.${width}s" "${divider}"
     echo
-    
 }
 
 show_help(){
@@ -224,6 +229,30 @@ add_single_comment(){
     fi
 }
 
+add_multiple_comment(){
+    read_multiple_comments
+    local NAME=${1}
+    local START_COMMENT=${2}
+    local END_COMMENT=${3}
+    if [[ -n ${START_COMMENT} && -n ${END_COMMENT} && -n ${NAME} ]]; then
+        # If language don't have associated multiple comment
+        local COMMENT="${START_COMMENT} ${END_COMMENT}"
+        if [ -z "${MULTIPLE_COMMENTS_DICT[${NAME}]}" ]; then
+            echo "${NAME}${DELIMITER}${COMMENT}" >> "${MULTIPLE_COMMENTS_PATH}"
+            MULTIPLE_COMMENTS_DICT[${NAME}]=${COMMENT}
+        else
+            > "${MULTIPLE_COMMENTS_PATH}"
+            write_multiple_comment_with_ommiting_given_lang "${NAME}"
+            echo "${NAME}${DELIMITER}${COMMENT}" >> "${MULTIPLE_COMMENTS_PATH}"
+            MULTIPLE_COMMENTS_DICT[${NAME}]=${COMMENT}
+        fi
+        echo "Added: ${NAME} | ${COMMENT}"
+        
+    else
+        echo "Parameters cannot be empty !"
+    fi
+}
+
 read_single_comments(){
     clear_single_comments
     while read -r line; do
@@ -231,6 +260,15 @@ read_single_comments(){
         local comment=$(echo "$line" | cut -d "|" -f2 | sed -e "${LEADING_SPACES_SEED}" -e "${TRAILING_SPACES_SEED}")
         SINGLE_COMMENTS_DICT[$lang]="$comment"
     done < "${SINGLE_COMMENTS_PATH}"
+}
+
+read_multiple_comments(){
+    clear_multiple_comments
+    while read -r line; do
+        local lang=$(echo "$line" | cut -d "|" -f1 | sed -e "${LEADING_SPACES_SEED}" -e "${TRAILING_SPACES_SEED}")
+        local comment=$(echo "$line" | cut -d "|" -f2 | sed -e "${LEADING_SPACES_SEED}" -e "${TRAILING_SPACES_SEED}")
+        MULTIPLE_COMMENTS_DICT[${lang}]="${comment}"
+    done < "${MULTIPLE_COMMENTS_PATH}"
 }
 
 remove_lang(){
@@ -330,6 +368,16 @@ write_single_comment_with_ommiting_given_lang(){
     done
 }
 
+write_multiple_comment_with_ommiting_given_lang(){
+    local GIVEN_LANG=${1}
+    for key in "${!MULTIPLE_COMMENTS_DICT[@]}"; do
+        if [ "${key}" != "${GIVEN_LANG}" ] ; then
+            local VALUE=${MULTIPLE_COMMENTS_DICT[${key}]}
+            echo "${key}${DELIMITER}${VALUE}" >> "${MULTIPLE_COMMENTS_PATH}"
+        fi
+    done
+}
+
 params_not_empty(){
     local NAME="${1}"
     local EXTENSION="${2}"
@@ -392,7 +440,7 @@ run_code_lines_report(){
 clear_results(){
     for key in "${!RESULTS[@]}"; do
         RESULTS[${key}]=""
-        COMMENTS_RESULTS[${key}]=""
+        COMMENT_RESULTS[${key}]=""
     done
 }
 
@@ -404,7 +452,13 @@ clear_extensions(){
 
 clear_single_comments(){
     for key in "${!SINGLE_COMMENTS_DICT[@]}"; do
-        unset SINGLE_COMMENT_RESULTS[${key}]
+        unset SINGLE_COMMENTS_DICT[${key}]
+    done
+}
+
+clear_multiple_comments(){
+    for key in "${!MULTIPLE_COMMENTS_PATH[@]}"; do
+        unset MULTIPLE_COMMENTS_DICT[${key}]
     done
 }
 
@@ -425,7 +479,7 @@ calc_results(){
             ((comments_qty+=COMMENTS_LINES))
         done
         RESULTS[${key}]=${code_qty}
-        COMMENTS_RESULTS[${key}]=${comments_qty}
+        COMMENT_RESULTS[${key}]=${comments_qty}
     done
 }
 
@@ -444,7 +498,7 @@ calc_total_lines_qty(){
     TOTAL_COMMENTS_QTY=0
     for key in "${!RESULTS[@]}"; do
         TOTAL_LINES_QTY=$((TOTAL_LINES_QTY + RESULTS[${key}]))
-        TOTAL_COMMENTS_QTY=$((TOTAL_COMMENTS_QTY + COMMENTS_RESULTS[${key}]))
+        TOTAL_COMMENTS_QTY=$((TOTAL_COMMENTS_QTY + COMMENT_RESULTS[${key}]))
     done
 }
 
@@ -464,7 +518,7 @@ print_results(){
         if [ ! "${RESULTS[${key}]}" -eq "0" ]; then
             local CODE_QTY=${RESULTS[${key}]}
             local PERCENT=$(calc_percentage "${CODE_QTY}" "${TOTAL_LINES_QTY}")
-            local COMMENTS_QTY=${COMMENTS_RESULTS[${key}]}
+            local COMMENTS_QTY=${COMMENT_RESULTS[${key}]}
             printf "${format}" "${key}" "${CODE_QTY}" "${COMMENTS_QTY}" "${PERCENT} %"
         fi
     done | sort -r -t : -n -k 2
