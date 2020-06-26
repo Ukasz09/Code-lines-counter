@@ -13,6 +13,7 @@ EXTENSIONS_PATH=${HOME}"/code_lines_counter/extensions.txt"
 IGNORE_PATH=${HOME}"/code_lines_counter/.gitignore"
 EXTENSIONS_DELIMITER="|"
 TOTAL_LINES_QTY=0
+TOTAL_COMMENTS_QTY=0
 EMPTY_LINE_SED='/^\s*$/d'
 LEADING_SPACES_SEED='s/^[[:space:]]*//'
 TRAILING_SPACES_SEED='s/[[:space:]]*$//'
@@ -364,22 +365,24 @@ count_lines(){
 
 calc_total_lines_qty(){
     TOTAL_LINES_QTY=0
+    TOTAL_COMMENTS_QTY=0
     for key in "${!RESULTS[@]}"; do
         TOTAL_LINES_QTY=$((TOTAL_LINES_QTY + RESULTS[${key}]))
+        TOTAL_COMMENTS_QTY=$((TOTAL_COMMENTS_QTY + COMMENTS_RESULTS[${key}]))
     done
 }
 
 print_results(){
-    divider="====================================================================================================================="
+    divider="======================================================================================================================"
     divider=${divider}${divider}
     header="\n | %-13s | %10s | %13s | %15s | \n"
-    format=" | %-13s : %10i : %13s : %19s | \n"
-    summary_format=" | %-13s : %10i | \n"
-    width=73
+    format=" | %-13s : %10i : %13s : %20s | \n"
+    summary_format=" | %-13s : %10i : %13i | \n"
+    width=69
     
     echo
     printf " %${width}.${width}s" "${divider}"
-    printf "${header}" "LANGUAGE" "CODE LINES" "COMMENT LINES" "LANG PERCENTAGE OF TOTAL"
+    printf "${header}" "LANGUAGE" "CODE LINES" "COMMENT LINES" "LANGUAGES PERCENTAGE"
     printf " %${width}.${width}s\n" "${divider}"
     for key in "${!RESULTS[@]}"; do
         if [ ! "${RESULTS[${key}]}" -eq "0" ]; then
@@ -390,8 +393,8 @@ print_results(){
         fi
     done | sort -r -t : -n -k 2
     printf " %${width}.${width}s\n" "${divider}"
-    printf "${summary_format}" "TOTAL" ${TOTAL_LINES_QTY}
-    printf " %30.30s" "${divider}"
+    printf "${summary_format}" "TOTAL" ${TOTAL_LINES_QTY} ${TOTAL_COMMENTS_QTY}
+    printf " %46.46s" "${divider}"
     echo
     echo
 }
