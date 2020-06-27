@@ -3,8 +3,6 @@
 # tmp
 SED_PATH="/home/ukasz09/Dokumenty/Dev/GitHub/Code-lines-counter/src/test.sed"
 ONE_LINER_COMMENT='\/\/'
-BLOCK_COMMENT_START='\/\*'
-BLOCK_COMMENT_END='\*\/'
 
 # MIT Licence | Łukasz Gajerski (https://github.com/Ukasz09)
 
@@ -481,6 +479,8 @@ run_code_lines_report(){
     echo
     clear_results
     read_available_extensions
+    read_single_comments
+    read_multiple_comments
     jupyter_to_scripts
     calc_results
     calc_total_lines_qty
@@ -523,7 +523,7 @@ calc_results(){
         code_qty=0
         comments_qty=0
         for ext in ${EXTENSIONS_DICT[${key}]}; do
-            local LINES=$(count_lines "${ext}")
+            local LINES=$(count_lines "${key}" "${ext}")
             local CODE_LINES=$(echo "${LINES}" | cut -d "|" -f1)
             local COMMENTS_LINES=$(echo "${LINES}" | cut -d "|" -f2)
             ((code_qty+=CODE_LINES))
@@ -535,11 +535,28 @@ calc_results(){
 }
 
 count_lines(){
-    local TOTAL_QTY=$(fdfind --ignore-file "${IGNORE_PATH}" -e "${1}" -x sed ${EMPTY_LINE_SED} | wc -l | awk '{total += $1} END {print total}')
+    local TOTAL_QTY=$(fdfind --ignore-file "${IGNORE_PATH}" -e "${2}" -x sed ${EMPTY_LINE_SED} | wc -l | awk '{total += $1} END {print total}')
+    local LANG=${1}
+    local BLOCK_COMMENT_START=$(echo "${MULTIPLE_COMMENTS_DICT[${LANG}]}" | cut -d ' ' -f1)
+    local BLOCK_COMMENT_END=$(echo "${MULTIPLE_COMMENTS_DICT[${LANG}]}" | cut -d ' ' -f2)
     
-    make_block_comments_sed ${BLOCK_COMMENT_START} ${BLOCK_COMMENT_END} ${SED_PATH}
+    if [[ -n ${BLOCK_COMMENT_START} && -n ${BLOCK_COMMENT_END} ]]; then
+        make_block_comments_sed ${BLOCK_COMMENT_START} ${BLOCK_COMMENT_END} ${SED_PATH}
+    else
+        > "${SED_PATH}"
+        echo
+    fi
+    local MULTIPLE_COM_SED="${SED_PATH}"
     
-    local WITHOUT_COMMENTS_QTY=$(fdfind --ignore-file "${IGNORE_PATH}" -e "${1}" -x sed "/^[[:blank:]]*${ONE_LINER_COMMENT}/d;s/${ONE_LINER_COMMENT}.*//" | sed -f ${SED_PATH} | sed ${EMPTY_LINE_SED} | wc -l | awk '{total += $1} END {print total}')
+    local ONE_LINER_COMMENT=${SINGLE_COMMENTS_DICT[${LANG}]}
+    if [[ -n ${ONE_LINER_COMMENT} ]]; then
+        local SINGLE_COM_SED="/^[[:blank:]]*${ONE_LINER_COMMENT}/d;s/${ONE_LINER_COMMENT}.*//"
+    else
+        local SINGLE_COM_SED=''
+    fi
+    
+    local WITHOUT_COMMENTS_QTY=$(fdfind --ignore-file "${IGNORE_PATH}" -e "${2}" -x sed "${SINGLE_COM_SED}" | sed -f "${MULTIPLE_COM_SED}" | sed "${EMPTY_LINE_SED}" | wc -l | awk '{total += $1} END {print total}')
+    
     local COMMENTS_QTY=$((TOTAL_QTY-WITHOUT_COMMENTS_QTY))
     echo "${WITHOUT_COMMENTS_QTY}|${COMMENTS_QTY}"
 }
