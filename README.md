@@ -13,6 +13,7 @@
 | ![](/doc/images/counter_norm.png) |
 
 </br>
+
 | For given specific directory |
 | ------- |
 | ![](/doc/images/counter_specific.png) |
