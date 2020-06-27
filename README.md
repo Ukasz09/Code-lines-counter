@@ -2,7 +2,7 @@
 
 > Generate a summary report of written lines of code (Bash)
 
-**code_lines_counter** is a simple tool used to generate report about written lines of code for given directory, with all sub-directories
+**code_lines_counter** - generate report about written lines of code and comments, with ommiting empty lines for given directory and all sub-directories
 
 ## Examples
 
@@ -31,6 +31,9 @@
 - Automatically excluding all files / localizations from `.gitignore` files found inside searched directories
 - Possibility of adding / removing additional localizations / files to exclude from counting
 - Possibility of adding / removing any file extensions with associated languages / names
+- Ommiting empty lines
+- Calculating amount of comments lines
+- Fully customizable by using command flags 
 
 ## Manual Page
 

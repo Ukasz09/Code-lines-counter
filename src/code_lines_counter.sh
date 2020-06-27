@@ -489,7 +489,7 @@ run_code_lines_report(){
 
 print_report_title(){
     local TITLE="${1}"
-    if [ -n ${TITLE} ]; then
+    if [ -n "${TITLE}" ]; then
         echo "RESULT FOR: ${TITLE}"
     fi
 }
