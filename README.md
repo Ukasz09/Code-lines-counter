@@ -2,15 +2,20 @@
 
 > Generate a summary report of written lines of code (Bash)
 
-**code_lines_counter** - generate report about written lines of code and comments, with ommiting empty lines for given directory and all sub-directories
+**code_lines_counter** - generate report about written lines of code and comments, with ommiting empty lines, for given directory and all sub-directories
 
 ## Examples
 
 - **Counting lines**
 
-| For actual directory | For given specific directory |
-| -------- | ------- |
-| ![](/doc/images/counter_norm.png) | ![](/doc/images/counter_specific.png) |
+| For actual directory |
+| -------- |
+| ![](/doc/images/counter_norm.png) |
+
+</br>
+| For given specific directory |
+| ------- |
+| ![](/doc/images/counter_specific.png) |
 
 - **Supported languages**
 
