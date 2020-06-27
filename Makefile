@@ -19,6 +19,7 @@ install:
 	cp "src/.gitignore" "${HOME}/${BIN_NAME}/.gitignore"
 	cp "src/${SINGLE_COMMENTS_NAME}.txt" "${HOME}/${BIN_NAME}/${SINGLE_COMMENTS_NAME}.txt"
 	cp "src/${MULTIPLE_COMMENTS_NAME}.txt" "${HOME}/${BIN_NAME}/${MULTIPLE_COMMENTS_NAME}.txt"
+	touch "${HOME}/${BIN_NAME}/multiple_comments.sed"
 	chmod -R 777 "${HOME}/${BIN_NAME}"
 	cp "src/${BIN_NAME}" "/etc/bash_completion.d"
 

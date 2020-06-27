@@ -18,22 +18,28 @@ If you want to exclude extra files without changing .gitignore files inside sear
 .B \-\-add-ignored
 .SH OPTIONS
 .TP
-.BI "\-a, \-\-add-lang "[language_name][extension1]<extension2> ... 
+.BI "\-a, \-\-add-lang " [LANG_NAME] " " [LANG_EXTENSION_1] " " <LANG_EXTENSION_2> " " ... 
+
 Add new extension / extensions with corresponding language_name to config file
 .TP
-.BI "\-r, \-\-remove-lang "[language_name][extension1]<extension2> ...
+.BI "\-r, \-\-remove-lang " [LANG_NAME] " " [LANG_EXTENSION_1] " " <LANG_EXTENSION_2> " " ...
+
 Remove extension / extensions with assigned language_name from config file.
 .TP
 .B \-l, \-\-list
+
 Print all saved languages with assigned extensions, from config file 
 .TP
-.BI "\-d, \-\-dir "[directory_path] 
+.BI "\-d, \-\-dir " [DIRECTORY_PATH] 
+
 Print report with lines of code for given directory with all sub-directories   
 .TP
 .B \-h, \-\-help
+
 Display this man page
 .TP
-.BI "\-\-add-ignored "[localization/file]<localization/file> ... 
+.BI "\-\-add-ignored " [LOCALIZATION_/_FILE] " " <LOCALIZATION_/_FILE> " " ... 
+
 Add excludeed files / directories from counting process
 .B code_lines_counter
 
@@ -41,7 +47,8 @@ Add excludeed files / directories from counting process
 .B code_lines_counter
 automatically exclude all files / localizations from .gitignore files inside searched directory !)
 .TP
-.BI "\-\-remove-ignored "[localization/file]<localization/file> ... 
+.BI "\-\-remove-ignored " [LOCALIZATION_/_FILE] " " <LOCALIZATION_/_FILE> " " ... 
+
 Readd excludeed files / directories from counting process
 .B code_lines_counter 
 
@@ -50,10 +57,32 @@ Readd excludeed files / directories from counting process
 automatically exclude all files / localizations from .gitignore files inside searched directory !)
 .TP
 .B "\-\-show-ignored  
+
 Show all extra ignored files / directories 
 
 (Take into consideration that
 .B code_lines_counter
 automatically exclude all files / localizations from .gitignore files inside searched directory !)
+.TP
+.BI "\-\-add-single-comment "[LANG_NAME] " " [COMMENT_SIGN]
+
+Add \ change existed single comment sign for given language
+.TP
+.BI "\-\-remove-single-comment "[LANG_NAME]
+
+Remove existed single comment sign for given language
+.TP
+.BI "\-\-add-multiple-comment " [LANG_NAME] " " [COMMENT_START_SIGN] " " [COMMENT_END_SIGN]
+
+Add \ change existed multiple (block) comment signs for given language
+.TP
+.BI "\-\-remove-multiple-comment " [LANG_NAME]
+
+Remove existed multiple (block) comment sign for given language
+.TP
+.B "\-\-show-comments-list
+
+Show all saved comments signs (single and multiple)
+
 .SH COPYRIGHT
 MIT LICENCE, Łukasz Gajerski (https://github.com/Ukasz09)

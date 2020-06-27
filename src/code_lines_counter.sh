@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# tmp
-SED_PATH="/home/ukasz09/Dokumenty/Dev/GitHub/Code-lines-counter/src/test.sed"
-ONE_LINER_COMMENT='\/\/'
-
 # MIT Licence | Łukasz Gajerski (https://github.com/Ukasz09)
 
 HOME=$(eval echo "~${SUDO_USER}") # for proper work with sudo
@@ -11,6 +7,7 @@ EXTENSIONS_PATH="${HOME}/code_lines_counter/extensions.txt"
 SINGLE_COMMENTS_PATH="${HOME}/code_lines_counter/single_comments.txt"
 MULTIPLE_COMMENTS_PATH="${HOME}/code_lines_counter/multiple_comments.txt"
 IGNORE_PATH=${HOME}"/code_lines_counter/.gitignore"
+SED_PATH="${HOME}/code_lines_counter/multiple_comments.sed"
 DELIMITER="|"
 TOTAL_LINES_QTY=0
 TOTAL_COMMENTS_QTY=0
@@ -169,14 +166,14 @@ show_lang_list(){
 show_comments_list(){
     divider="=========================================="
     divider=${divider}${divider}
-    format=" | %-15s : %15s : %15s | \n"
-    header="\n | %-15s | %15s | %15s | \n"
+    format=" | %-15s : %15s : %17s | \n"
+    header="\n | %-15s | %15s | %17s | \n"
     width=57
     
     echo
     printf " %${width}.${width}s" "${divider}"
-    printf "${header}" "LANGUAGE" "SINGLE COMMENT" "MULTIPLE COMMENT"
-    printf "%${width}.${width}s \n" "${divider}"
+    printf " ${header}" "LANGUAGE" "SINGLE COMMENT" "MULTIPLE COMMENT"
+    printf " %${width}.${width}s \n" "${divider}"
     read_single_comments
     read_multiple_comments
     for LANG in "${!SINGLE_COMMENTS_DICT[@]}"; do
@@ -312,7 +309,7 @@ remove_multiple_comment(){
         if [ -n "${MULTIPLE_COMMENTS_DICT[${NAME}]}" ]; then
             > "${MULTIPLE_COMMENTS_PATH}"
             write_multiple_comment_with_ommiting_given_lang "${NAME}"
-            echo "Correct removed single comment for language: ${NAME}"
+            echo "Correct removed multiple (block) comment for language: ${NAME}"
         else
             echo "Config file doesn't contain single comments sign for language <${NAME}> !"
         fi
@@ -458,8 +455,9 @@ check_flag_correctness(){
 
 # logic ----------------------------------------------------------------------------- #
 count_in_specific_dir(){
-    cd "${1}" || exit 1
-    run_code_lines_report
+    local DIR_PATH="${1}"
+    cd "${DIR_PATH}" || exit 1
+    run_code_lines_report "${DIR_PATH}"
     cd - > /dev/null
 }
 
@@ -484,8 +482,16 @@ run_code_lines_report(){
     jupyter_to_scripts
     calc_results
     calc_total_lines_qty
+    print_report_title "${1}"
     print_results
     clear_jupyter_tmp_files
+}
+
+print_report_title(){
+    local TITLE="${1}"
+    if [ -n ${TITLE} ]; then
+        echo "RESULT FOR: ${TITLE}"
+    fi
 }
 
 clear_results(){
@@ -573,14 +579,14 @@ calc_total_lines_qty(){
 print_results(){
     divider="======================================================================================================================"
     divider=${divider}${divider}
-    header="\n | %-13s | %10s | %13s | %15s | \n"
-    format=" | %-13s : %10i : %13s : %20s | \n"
-    summary_format=" | %-13s : %10i : %13i | \n"
-    width=69
+    header="\n | %-13s | %10s | %11s | %15s | \n"
+    format=" | %-13s : %10i : %14s : %20s | \n"
+    summary_format=" | %-13s : %10i : %14i | \n"
+    width=70
     
     echo
     printf " %${width}.${width}s" "${divider}"
-    printf "${header}" "LANGUAGE" "CODE LINES" "COMMENT LINES" "LANGUAGES PERCENTAGE"
+    printf "${header}" "LANGUAGE" "CODE LINES" "COMMENTS LINES" "LANGUAGES PERCENTAGE"
     printf " %${width}.${width}s\n" "${divider}"
     for key in "${!RESULTS[@]}"; do
         if [ ! "${RESULTS[${key}]}" -eq "0" ]; then
@@ -592,7 +598,7 @@ print_results(){
     done | sort -r -t : -n -k 2
     printf " %${width}.${width}s\n" "${divider}"
     printf "${summary_format}" "TOTAL" ${TOTAL_LINES_QTY} ${TOTAL_COMMENTS_QTY}
-    printf " %46.46s" "${divider}"
+    printf " %46.47s" "${divider}"
     echo
     echo
 }

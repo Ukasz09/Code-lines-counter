@@ -1,2 +1,16 @@
 Java|\/\* \*\/
 Python|""" """
+Scala|\/\* \*\/
+PowerShell|\<\# \#\>
+PostgreSql|\/\* \*\/
+SQL|\/\* \*\/
+C/C++|\/\* \*\/
+CSS|\/\* \*\/
+Elixir|""" """
+HTML|\/\* \*\/
+JavaScript|\/\* \*\/
+LUA|\-\-\[\[ \-\-\]
+Objective-C|\/\* \*\/
+Perl|\# \=pod \=cut
+PHP|\/\* \*\/
+RUBY|\=begin \=end
