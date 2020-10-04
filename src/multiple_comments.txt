@@ -7,10 +7,11 @@ SQL|\/\* \*\/
 C/C++|\/\* \*\/
 CSS|\/\* \*\/
 Elixir|""" """
-HTML|\/\* \*\/
+HTML|<-- -->
 JavaScript|\/\* \*\/
 LUA|\-\-\[\[ \-\-\]
 Objective-C|\/\* \*\/
 Perl|\# \=pod \=cut
 PHP|\/\* \*\/
 RUBY|\=begin \=end
+TypeScript|\/\* \*\/

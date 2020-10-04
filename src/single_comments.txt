@@ -16,3 +16,4 @@ PHP|\/\/
 PowerShell|\#
 RUBY|\#
 Shell|\#
+TypeScript|\/\/

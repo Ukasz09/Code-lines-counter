@@ -21,3 +21,4 @@ Scala|scala
 OCaml|ml
 CSS|scss css
 Markdown|md
+TypeScript|ts
